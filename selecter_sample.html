@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>App Selector</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background-color: #f0f0f0;
+        margin: 0;
+        box-sizing: border-box;
+      }
+      .instructions {
+        margin-bottom: 40px;
+        font-size: 30px;
+        font-family: Arial, sans-serif;
+        color: #333;
+      }
+      #app-container {
+        display: grid;
+        grid-template-columns: repeat(6, 150px);
+        grid-template-rows: repeat(6, 150px);
+        gap: 20px;
+        padding: 40px 0; /* 上下各留白40px */
+      }
+      .app {
+        width: 150px;
+        height: 150px;
+        background-color: white;
+        border: 1px solid black;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      .selected {
+        background-color: yellow;
+      }
+      .selection-box {
+        position: absolute;
+        border: 2px dashed black;
+        background-color: rgba(0, 0, 0, 0.1);
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="instructions">按住 Shift 拖曳選取 / 按住 Ctrl 拖曳反選取</div>
+
+    <div id="app-container">
+      <!-- 生成 6x6 的框框 -->
+      <script>
+        for (let i = 1; i <= 36; i++) {
+          document.write('<div class="app"></div>');
+        }
+      </script>
+    </div>
+
+    <div class="selection-box" id="selectionBox"></div>
+
+    <script>
+      const apps = document.querySelectorAll('.app');
+      const selectionBox = document.getElementById('selectionBox');
+      let isSelecting = false;
+      let startX, startY;
+      let selectedBeforeDrag = new Set(); // 用於記錄開始拖曳時已選中的元素
+
+      document.addEventListener('mousedown', (e) => {
+        if (e.button === 0) {
+          e.preventDefault(); // 防止游標顯示禁止符號
+          isSelecting = true;
+          startX = e.clientX;
+          startY = e.clientY;
+
+          selectionBox.style.left = `${startX}px`;
+          selectionBox.style.top = `${startY}px`;
+          selectionBox.style.width = `0px`;
+          selectionBox.style.height = `0px`;
+          selectionBox.style.display = 'block';
+
+          if (!e.ctrlKey && !e.shiftKey) {
+            apps.forEach((app) => app.classList.remove('selected'));
+          } else if (e.ctrlKey) {
+            selectedBeforeDrag = new Set([...document.querySelectorAll('.selected')]);
+          }
+        }
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (isSelecting) {
+          const currentX = e.clientX;
+          const currentY = e.clientY;
+
+          const width = Math.abs(currentX - startX);
+          const height = Math.abs(currentY - startY);
+
+          selectionBox.style.width = `${width}px`;
+          selectionBox.style.height = `${height}px`;
+
+          if (currentX < startX) {
+            selectionBox.style.left = `${currentX}px`;
+          }
+          if (currentY < startY) {
+            selectionBox.style.top = `${currentY}px`;
+          }
+
+          apps.forEach((app) => {
+            const appRect = app.getBoundingClientRect();
+            const selectionRect = selectionBox.getBoundingClientRect();
+            const isInSelection = appRect.right >= selectionRect.left && appRect.left <= selectionRect.right && appRect.bottom >= selectionRect.top && appRect.top <= selectionRect.bottom;
+
+            if (isInSelection) {
+              if (e.ctrlKey) {
+                if (selectedBeforeDrag.has(app)) {
+                  app.classList.remove('selected');
+                } else {
+                  app.classList.add('selected');
+                }
+              } else {
+                app.classList.add('selected');
+              }
+            } else if (!e.ctrlKey && !e.shiftKey) {
+              app.classList.remove('selected');
+            }
+          });
+        }
+      });
+
+      document.addEventListener('mouseup', (e) => {
+        if (e.button === 0) {
+          isSelecting = false;
+          selectionBox.style.display = 'none';
+          selectedBeforeDrag.clear(); // 清空選中的元素
+        }
+      });
+
+      apps.forEach((app) => {
+        app.addEventListener('click', (e) => {
+          if (e.ctrlKey) {
+            app.classList.toggle('selected');
+          } else if (e.shiftKey) {
+            app.classList.add('selected');
+          } else {
+            apps.forEach((app) => app.classList.remove('selected'));
+            app.classList.add('selected');
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
