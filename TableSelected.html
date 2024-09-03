@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>9x9 表格</title>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+        td {
+            width: 72px;
+            height: 72px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+        .selected {
+            background-color: yellow;
+        }
+    </style>
+</head>
+<body>
+    <table id="grid">
+        <tbody>
+            <!-- 使用 JavaScript 生成表格內容 -->
+        </tbody>
+    </table>
+
+    <script>
+        // 生成 9x9 表格
+        const table = document.getElementById("grid").getElementsByTagName("tbody")[0];
+        for (let i = 0; i < 9; i++) {
+            const row = table.insertRow();
+            for (let j = 0; j < 9; j++) {
+                const cell = row.insertCell();
+                cell.addEventListener("mousedown", handleMouseDown);
+                cell.addEventListener("mouseover", handleMouseOver);
+                cell.addEventListener("mouseup", handleMouseUp);
+                cell.addEventListener("dragstart", (event) => event.preventDefault()); // 禁止拖曳操作
+            }
+        }
+
+        let isMouseDown = false;
+        let startCell = null;
+        let initialSelectionState = [];
+
+        function handleMouseDown(event) {
+            isMouseDown = true;
+            startCell = event.target;
+
+            // 記錄每個格子的初始狀態
+            initialSelectionState = Array.from(table.getElementsByTagName("td")).map(cell => cell.classList.contains("selected"));
+
+            toggleCell(event.target);
+        }
+
+        function handleMouseOver(event) {
+            if (isMouseDown) {
+                selectRange(startCell, event.target);
+            }
+        }
+
+        function handleMouseUp() {
+            isMouseDown = false;
+        }
+
+        function toggleCell(cell) {
+            if (cell.classList.contains("selected")) {
+                cell.classList.remove("selected");
+            } else {
+                cell.classList.add("selected");
+            }
+        }
+
+        function selectRange(startCell, endCell) {
+            const startRow = startCell.parentElement.rowIndex;
+            const startCol = startCell.cellIndex;
+            const endRow = endCell.parentElement.rowIndex;
+            const endCol = endCell.cellIndex;
+
+            const minRow = Math.min(startRow, endRow);
+            const maxRow = Math.max(startRow, endRow);
+            const minCol = Math.min(startCol, endCol);
+            const maxCol = Math.max(startCol, endCol);
+
+            for (let row = minRow; row <= maxRow; row++) {
+                const tableRow = table.rows[row];
+                for (let col = minCol; col <= maxCol; col++) {
+                    const cellIndex = row * 9 + col;
+                    const cell = tableRow.cells[col];
+                    const wasSelected = initialSelectionState[cellIndex];
+
+                    // 針對初始狀態已選取的格子，取消選取
+                    if (wasSelected && cell.classList.contains("selected")) {
+                        cell.classList.remove("selected");
+                    }
+                    // 針對初始狀態未被選取的格子，選取
+                    else if (!wasSelected && !cell.classList.contains("selected")) {
+                        cell.classList.add("selected");
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
