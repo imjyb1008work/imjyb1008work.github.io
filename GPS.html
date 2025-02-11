@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>獲取 GPS 位置</title>
+</head>
+<body>
+    <h2>獲取您的 GPS 位置</h2>
+    <button onclick="getLocation()">獲取位置</button>
+    <p id="location">等待獲取位置...</p>
+
+    <script>
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            } else {
+                document.getElementById("location").innerText = "您的瀏覽器不支援 GPS 服務";
+            }
+        }
+
+        function showPosition(position) {
+            let latitude = position.coords.latitude;
+            let longitude = position.coords.longitude;
+            document.getElementById("location").innerHTML = 
+                "經度: " + longitude + "<br>緯度: " + latitude;
+        }
+
+        function showError(error) {
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    document.getElementById("location").innerText = "使用者拒絕請求地理位置";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    document.getElementById("location").innerText = "無法獲取位置資訊";
+                    break;
+                case error.TIMEOUT:
+                    document.getElementById("location").innerText = "請求逾時";
+                    break;
+                case error.UNKNOWN_ERROR:
+                    document.getElementById("location").innerText = "未知錯誤";
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>
