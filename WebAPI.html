@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Web API AJAX 測試</title>
+    <!-- 引入 jQuery（可換自己的 CDN 或本機檔案） -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+<input type="text" id="companyId" placeholder="" />
+<button id="btnCallApi" type="button">呼叫 Web API</button>
+
+<pre id="result"></pre>
+
+<script>
+    $(function () {
+        $("#btnCallApi").on("click", function () {
+            $.ajax({
+                url: "http://210.63.214.248/api/Companies/Exists",
+                type: "GET",
+                dataType: "json",
+                data:{
+                    companyId: $("#companyId").val(),
+                },
+                success: function (data, textStatus, xhr) {
+                    $("#result").text(JSON.stringify(data, null, 2));
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    $("#result").text(
+                        "狀態碼: " + xhr.status + "\n" +
+                        "錯誤: " + errorThrown + "\n" +
+                        "回應內容: " + xhr.responseText
+                    );
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
+
+
+
