@@ -3,44 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>獲取 GPS 位置</title>
+    <title>GPS 高精度抓取測試</title>
+    <style>
+        .info { font-family: Consolas, monospace; background: #f4f4f4; padding: 10px; border-radius: 4px; }
+        .success { color: #2c3e50; }
+        .timer { color: #e74c3c; font-weight: bold; }
+    </style>
 </head>
 <body>
-    <h2>獲取您的 GPS 位置</h2>
-    <button onclick="getLocation()">獲取位置</button>
-    <p id="location">等待獲取位置...</p>
+    <h2>GPS 抓取效能監測</h2>
+    <button onclick="getLocation()">開始抓取位置</button>
+    <div id="result" class="info" style="margin-top: 15px;">等待指令...</div>
 
     <script>
+        let startTime;
+
         function getLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(showPosition, showError);
-            } else {
-                document.getElementById("location").innerText = "您的瀏覽器不支援 GPS 服務";
+            const display = document.getElementById("result");
+            display.innerText = "定位中...";
+            
+            if (!navigator.geolocation) {
+                display.innerText = "您的瀏覽器不支援 Geolocation API";
+                return;
             }
+
+            // 記錄起始時間
+            startTime = performance.now();
+
+            const options = {
+                enableHighAccuracy: true, // 強制使用 GPS (而非網路定位)
+                timeout: 10000,           // 逾時設定 10 秒
+                maximumAge: 0             // 不使用快取，立即抓取新位置
+            };
+
+            navigator.geolocation.getCurrentPosition(showPosition, showError, options);
         }
 
         function showPosition(position) {
-            let latitude = position.coords.latitude;
-            let longitude = position.coords.longitude;
-            document.getElementById("location").innerHTML = 
-                "經度: " + longitude + "<br>緯度: " + latitude;
+            const endTime = performance.now();
+            const duration = (endTime - startTime).toFixed(2); // 計算耗時 (ms)
+
+            const { latitude, longitude, accuracy } = position.coords;
+            
+            document.getElementById("result").innerHTML = `
+                <div class="success">
+                    緯度: ${latitude}<br>
+                    經度: ${longitude}<br>
+                    精度: ${accuracy.toFixed(1)} 公尺
+                </div>
+                <hr>
+                <div class="timer">抓取耗時: ${duration} ms</div>
+            `;
         }
 
         function showError(error) {
+            const endTime = performance.now();
+            const duration = (endTime - startTime).toFixed(2);
+            let msg = "";
+
             switch (error.code) {
-                case error.PERMISSION_DENIED:
-                    document.getElementById("location").innerText = "使用者拒絕請求地理位置";
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    document.getElementById("location").innerText = "無法獲取位置資訊";
-                    break;
-                case error.TIMEOUT:
-                    document.getElementById("location").innerText = "請求逾時";
-                    break;
-                case error.UNKNOWN_ERROR:
-                    document.getElementById("location").innerText = "未知錯誤";
-                    break;
+                case error.PERMISSION_DENIED:    msg = "使用者拒絕授權"; break;
+                case error.POSITION_UNAVAILABLE: msg = "位置資訊不可用"; break;
+                case error.TIMEOUT:              msg = "要求逾時"; break;
+                default:                         msg = "未知錯誤"; break;
             }
+            document.getElementById("result").innerHTML = `錯誤: ${msg} (耗時: ${duration} ms)`;
         }
     </script>
 </body>
