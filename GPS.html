@@ -3,71 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPS 高精度抓取測試</title>
+    <title>GPS 自動抓取測試</title>
     <style>
-        .info { font-family: Consolas, monospace; background: #f4f4f4; padding: 10px; border-radius: 4px; }
-        .success { color: #2c3e50; }
-        .timer { color: #e74c3c; font-weight: bold; }
+        .info { font-family: 'Segoe UI', Consolas, monospace; background: #202124; color: #e8eaed; padding: 20px; border-radius: 8px; line-height: 1.6; }
+        .timer { color: #8ab4f8; font-weight: bold; border-top: 1px solid #3c4043; margin-top: 10px; padding-top: 10px; }
+        .status { color: #f28b82; }
     </style>
 </head>
 <body>
-    <h2>GPS 抓取效能監測</h2>
-    <button onclick="getLocation()">開始抓取位置</button>
-    <div id="result" class="info" style="margin-top: 15px;">等待指令...</div>
+    <div id="result" class="info">初始化中...</div>
 
     <script>
-        let startTime;
+        // 高精度計時起始點
+        const startTime = performance.now();
 
-        function getLocation() {
+        (function initGPS() {
             const display = document.getElementById("result");
-            display.innerText = "定位中...";
-            
+            display.innerText = "正在取得當下 GPS 位置 (High Accuracy)...";
+
             if (!navigator.geolocation) {
-                display.innerText = "您的瀏覽器不支援 Geolocation API";
+                display.innerHTML = '<span class="status">Error: 瀏覽器不支援 Geolocation</span>';
                 return;
             }
 
-            // 記錄起始時間
-            startTime = performance.now();
-
             const options = {
-                enableHighAccuracy: true, // 強制使用 GPS (而非網路定位)
-                timeout: 10000,           // 逾時設定 10 秒
-                maximumAge: 0             // 不使用快取，立即抓取新位置
+                enableHighAccuracy: true, 
+                timeout: 15000,           
+                maximumAge: 0             
             };
 
-            navigator.geolocation.getCurrentPosition(showPosition, showError, options);
-        }
+            // 直接呼叫
+            navigator.geolocation.getCurrentPosition(success, error, options);
+        })();
 
-        function showPosition(position) {
-            const endTime = performance.now();
-            const duration = (endTime - startTime).toFixed(2); // 計算耗時 (ms)
-
+        function success(position) {
+            const duration = (performance.now() - startTime).toFixed(2);
             const { latitude, longitude, accuracy } = position.coords;
             
             document.getElementById("result").innerHTML = `
-                <div class="success">
-                    緯度: ${latitude}<br>
-                    經度: ${longitude}<br>
-                    精度: ${accuracy.toFixed(1)} 公尺
-                </div>
-                <hr>
-                <div class="timer">抓取耗時: ${duration} ms</div>
+                <div>緯度: ${latitude}</div>
+                <div>經度: ${longitude}</div>
+                <div>精度: ±${accuracy.toFixed(1)} m</div>
+                <div class="timer">頁面載入至抓取成功耗時: ${duration} ms</div>
             `;
         }
 
-        function showError(error) {
-            const endTime = performance.now();
-            const duration = (endTime - startTime).toFixed(2);
+        function error(err) {
+            const duration = (performance.now() - startTime).toFixed(2);
             let msg = "";
-
-            switch (error.code) {
-                case error.PERMISSION_DENIED:    msg = "使用者拒絕授權"; break;
-                case error.POSITION_UNAVAILABLE: msg = "位置資訊不可用"; break;
-                case error.TIMEOUT:              msg = "要求逾時"; break;
-                default:                         msg = "未知錯誤"; break;
+            switch (err.code) {
+                case err.PERMISSION_DENIED:    msg = "使用者拒絕定位授權"; break;
+                case err.POSITION_UNAVAILABLE: msg = "無法取得位置"; break;
+                case err.TIMEOUT:              msg = "定位逾時"; break;
+                default:                       msg = "未知錯誤"; break;
             }
-            document.getElementById("result").innerHTML = `錯誤: ${msg} (耗時: ${duration} ms)`;
+            document.getElementById("result").innerHTML = `
+                <div class="status">抓取失敗: ${msg}</div>
+                <div class="timer">失敗耗時: ${duration} ms</div>
+            `;
         }
     </script>
 </body>
