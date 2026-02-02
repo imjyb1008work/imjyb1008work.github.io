@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<title>保單與銀行存款報酬比較 (純前端)</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+  input { width: 100%; padding: 6px; margin: 6px 0 12px; box-sizing: border-box; }
+  button { padding: 10px 20px; font-size: 16px; }
+  h2 { margin-top: 30px; }
+  .result { margin-top: 20px; background: #f9f9f9; padding: 15px; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+<h1>保單與銀行存款報酬比較</h1>
+
+<form id="calcForm" onsubmit="return false;">
+  <h2>保單參數</h2>
+  <label>每年繳費</label>
+  <input type="number" id="insuranceAnnualPayment" min="0" step="any" required />
+  
+  <label>繳費年數</label>
+  <input type="number" id="insuranceYears" min="1" step="1" required />
+  
+  <label>到期保額</label>
+  <input type="number" id="insuranceMaturityAmount" min="0" step="any" required />
+  
+  <h2>銀行存款參數</h2>
+  <label>每年存款</label>
+  <input type="number" id="depositAnnualAmount" min="0" step="any" required />
+  
+  <label>存款年利率 (%)</label>
+  <input type="number" id="depositInterestRate" min="0" step="any" required />
+  
+  <label>存款年數</label>
+  <input type="number" id="depositYears" min="1" step="1" required />
+  
+  <button onclick="calculate()">計算比較</button>
+</form>
+
+<div id="result" class="result"></div>
+
+<script>
+// IRR 計算 (二分法)
+function calculateIRR(annualPayment, years, maturityAmount) {
+  let low = 0.0;
+  let high = 1.0;
+  let irr = 0.0;
+  
+  for (let i = 0; i < 50; i++) {
+    irr = (low + high) / 2;
+    let npv = 0.0;
+    for (let t = 1; t <= years; t++) {
+      npv += annualPayment / Math.pow(1 + irr, t);
+    }
+    npv += maturityAmount / Math.pow(1 + irr, years);
+    
+    if (npv > 0) {
+      low = irr;
+    } else {
+      high = irr;
+    }
+  }
+  
+  return irr;
+}
+
+function calculate() {
+  const insuranceAnnualPayment = parseFloat(document.getElementById('insuranceAnnualPayment').value);
+  const insuranceYears = parseInt(document.getElementById('insuranceYears').value);
+  const insuranceMaturityAmount = parseFloat(document.getElementById('insuranceMaturityAmount').value);
+  const depositAnnualAmount = parseFloat(document.getElementById('depositAnnualAmount').value);
+  const depositInterestRate = parseFloat(document.getElementById('depositInterestRate').value) / 100;
+  const depositYears = parseInt(document.getElementById('depositYears').value);
+
+  if (isNaN(insuranceAnnualPayment) || isNaN(insuranceYears) || isNaN(insuranceMaturityAmount) ||
+      isNaN(depositAnnualAmount) || isNaN(depositInterestRate) || isNaN(depositYears)) {
+    alert('請輸入正確數值');
+    return;
+  }
+  
+  // 計算保單 IRR
+  // 保費現金流是負值
+  const irrInsurance = calculateIRR(-insuranceAnnualPayment, insuranceYears, insuranceMaturityAmount);
+  const totalReturnInsurance = (insuranceMaturityAmount - insuranceAnnualPayment * insuranceYears) / (insuranceAnnualPayment * insuranceYears);
+
+  // 計算銀行存款終值
+  const fvDeposit = depositAnnualAmount * ( (Math.pow(1 + depositInterestRate, depositYears) - 1) / depositInterestRate );
+  const totalReturnDeposit = (fvDeposit - depositAnnualAmount * depositYears) / (depositAnnualAmount * depositYears);
+  const irrDeposit = depositInterestRate; // 存款利率即年化報酬率
+
+  // 顯示結果
+  const resultDiv = document.getElementById('result');
+  resultDiv.innerHTML = `
+    <h3>計算結果</h3>
+    <ul>
+      <li>保單年化報酬率(IRR)：${(irrInsurance * 100).toFixed(2)}%</li>
+      <li>保單總報酬率：${(totalReturnInsurance * 100).toFixed(2)}%</li>
+      <li>銀行存款年化報酬率：${(irrDeposit * 100).toFixed(2)}%</li>
+      <li>銀行存款總報酬率：${(totalReturnDeposit * 100).toFixed(2)}%</li>
+      <li>銀行存款期末終值：約 ${fvDeposit.toFixed(2)} 元</li>
+    </ul>
+  `;
+}
+</script>
+
+</body>
+</html>
