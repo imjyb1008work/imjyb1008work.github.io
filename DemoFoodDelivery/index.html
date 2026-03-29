@@ -214,12 +214,13 @@
     });
 
     // --- 歷史紀錄排序邏輯 ---
-    // 規則：優先比對接單日期 (date) 由新到舊，若日期相同，則比對建檔時間 (timestamp) 由新到舊
     apiData.history = [...localData].sort((a, b) => {
+        // 1. 先比對接單日期 (date) 由新到舊
         if (b.date !== a.date) {
-            return b.date.localeCompare(a.date); // 日期由大到小
+            return b.date.localeCompare(a.date);
         }
-        return b.timestamp - a.timestamp; // 建檔時間由大到小
+        // 2. 若日期相同，則比對 ID (即建檔時間毫秒數) 由新到舊
+        return b.id - a.id; 
     });
 
     // 計算時薪與 FP 級距 (省略重複邏輯...)
@@ -250,26 +251,33 @@
             document.getElementById('fp-detail').innerText = `${fp.accumulatedOrders} / 目標 ${fp.nextTierOrders} (${fp.nextTierBonus}元)`;
         }
 
-        // --- 歷史紀錄渲染 (加入建檔時間顯示) ---
-function renderHistory() {
+        function renderHistory() {
     const list = document.getElementById('history-list');
+    
     list.innerHTML = apiData.history.map(r => {
-        // 將建檔時間 timestamp 轉為可讀的 01:06 格式
-        const createTime = r.timestamp ? new Date(r.timestamp).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--';
+        // 從 r.id 提取時間並轉為 24 小時制的 HH:mm
+        // 如果 id 不存在則顯示 --:--
+        const createTime = r.id ? new Date(r.id).toLocaleTimeString('zh-TW', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            hour12: false,
+            timeZone: 'Asia/Taipei' 
+        }) : '--:--';
         
         return `
-            <div class="platform-row" style="align-items: center;">
+            <div class="platform-row" style="align-items: center; border-bottom: 1px solid #eee; padding: 10px 0;">
                 <div style="flex: 1;">
-                    <strong>${r.date}</strong> <span style="font-size: 0.75em; color: #999;">(建檔:${createTime})</span><br>
-                    <small style="color: #666;">${r.platform}</small>
+                    <strong style="font-size: 1.05em;">${r.date}</strong> 
+                    <span style="font-size: 0.75em; color: #999; margin-left: 5px;">(建檔:${createTime})</span><br>
+                    <small style="color: #666; background: #f0f0f0; padding: 2px 5px; border-radius: 3px;">${r.platform}</small>
                 </div>
                 <div style="text-align:right">
-                    <strong style="color: #28a745;">${r.income}元</strong><br>
-                    <small>${r.orders}單 / ${r.hours}h</small>
+                    <strong style="color: #28a745; font-size: 1.1em;">${r.income}元</strong><br>
+                    <small style="color: #444;">${r.orders}單 / ${r.hours}h</small>
                 </div>
             </div>
         `;
-    }).join('') || '<p style="text-align:center; padding: 20px;">尚無紀錄</p>';
+    }).join('') || '<p style="text-align:center; padding: 20px; color: #999;">目前尚無紀錄</p>';
 }
 
         function renderStats(mode) {
