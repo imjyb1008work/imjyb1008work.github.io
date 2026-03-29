@@ -1,266 +1,70 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-
 <head>
-    <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>外送記帳 App</title>
+    <title>外送記帳 - 離線版</title>
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: sans-serif;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-            color: #333;
-            padding-bottom: 70px;
-        }
-
-        .page {
-            display: none;
-            padding: 15px;
-        }
-
-        .page.active {
-            display: block;
-        }
-
-        .card {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .card-title {
-            font-weight: bold;
-            margin-top: 0;
-            margin-bottom: 10px;
-            font-size: 1.1em;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 5px;
-        }
-
-        .grid-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            text-align: center;
-        }
-
-        .stat-box {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 6px;
-        }
-
-        .stat-label {
-            font-size: 0.8em;
-            color: #666;
-        }
-
-        .stat-value {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #0d6efd;
-            margin-top: 5px;
-        }
-
-        .progress-bar-container {
-            background: #e9ecef;
-            border-radius: 4px;
-            height: 20px;
-            width: 100%;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-
-        .progress-bar {
-            background: #d63384;
-            height: 100%;
-            width: 0%;
-            transition: width 0.5s ease-in-out;
-        }
-
-        .progress-text {
-            font-size: 0.85em;
-            color: #555;
-            text-align: right;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 1em;
-        }
-
-        .btn-submit {
-            width: 100%;
-            padding: 12px;
-            background: #0d6efd;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .btn-submit:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
-        }
-
-        .tabs {
-            display: flex;
-            background: white;
-            border-radius: 6px;
-            overflow: hidden;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-        }
-
-        .tab-btn {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            border: none;
-            background: none;
-            font-weight: bold;
-            cursor: pointer;
-            border-right: 1px solid #eee;
-        }
-
-        .tab-btn:last-child {
-            border-right: none;
-        }
-
-        .tab-btn.active {
-            background: #0d6efd;
-            color: white;
-        }
-
-        .platform-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .platform-row:last-child {
-            border-bottom: none;
-        }
-
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: white;
-            display: flex;
-            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-            z-index: 100;
-        }
-
-        .nav-item {
-            flex: 1;
-            text-align: center;
-            padding: 12px 0;
-            font-size: 0.9em;
-            color: #666;
-            cursor: pointer;
-            border-top: 3px solid transparent;
-        }
-
-        .nav-item.active {
-            color: #0d6efd;
-            font-weight: bold;
-            border-top-color: #0d6efd;
-        }
+        /* CSS 保持不變，確保手機版體驗 */
+        * { box-sizing: border-box; font-family: sans-serif; }
+        body { margin: 0; padding: 0; background-color: #f5f5f5; color: #333; padding-bottom: 70px; }
+        .page { display: none; padding: 15px; }
+        .page.active { display: block; }
+        .card { background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card-title { font-weight: bold; margin-top: 0; margin-bottom: 10px; font-size: 1.1em; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center; }
+        .stat-box { background: #f8f9fa; padding: 10px; border-radius: 6px; }
+        .stat-label { font-size: 0.8em; color: #666; }
+        .stat-value { font-size: 1.2em; font-weight: bold; color: #0d6efd; margin-top: 5px; }
+        .progress-bar-container { background: #e9ecef; border-radius: 4px; height: 20px; width: 100%; overflow: hidden; margin: 10px 0; }
+        .progress-bar { background: #d63384; height: 100%; width: 0%; transition: width 0.5s ease-in-out; }
+        .progress-text { font-size: 0.85em; color: #555; text-align: right; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+        .btn-submit { width: 100%; padding: 12px; background: #0d6efd; color: white; border: none; border-radius: 4px; font-size: 1.1em; font-weight: bold; cursor: pointer; }
+        .tabs { display: flex; background: white; border-radius: 6px; overflow: hidden; margin-bottom: 15px; border: 1px solid #ddd; }
+        .tab-btn { flex: 1; text-align: center; padding: 10px; border: none; background: none; font-weight: bold; cursor: pointer; border-right: 1px solid #eee; }
+        .tab-btn.active { background: #0d6efd; color: white; }
+        .platform-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; box-shadow: 0 -2px 5px rgba(0,0,0,0.1); z-index: 100; }
+        .nav-item { flex: 1; text-align: center; padding: 12px 0; font-size: 0.9em; color: #666; cursor: pointer; border-top: 3px solid transparent; }
+        .nav-item.active { color: #0d6efd; font-weight: bold; border-top-color: #0d6efd; }
     </style>
 </head>
-
 <body>
 
     <div id="page-home" class="page active">
-        <h2>外送記帳 <span style="font-size: 0.6em; color: #666;">人員: 敬帥</span></h2>
-
+        <h2>外送記帳 <span style="font-size: 0.6em; color: #b10000;">(離線儲存模式)</span></h2>
         <div class="card">
             <h3 class="card-title">今日統計</h3>
             <div class="grid-stats">
-                <div class="stat-box">
-                    <div class="stat-label">單數</div>
-                    <div id="home-orders" class="stat-value">-</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">收入</div>
-                    <div id="home-income" class="stat-value">-</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">時薪</div>
-                    <div id="home-wage" class="stat-value">-</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">工時</div>
-                    <div id="home-hours" class="stat-value">-</div>
-                </div>
+                <div class="stat-box"><div class="stat-label">單數</div><div id="home-orders" class="stat-value">0</div></div>
+                <div class="stat-box"><div class="stat-label">收入</div><div id="home-income" class="stat-value">0</div></div>
+                <div class="stat-box"><div class="stat-label">時薪</div><div id="home-wage" class="stat-value">0</div></div>
+                <div class="stat-box"><div class="stat-label">工時</div><div id="home-hours" class="stat-value">0</div></div>
             </div>
         </div>
-
         <div class="card">
             <h3 class="card-title">Foodpanda 週期進度</h3>
-            <div id="fp-tips" style="font-size: 0.9em; margin-bottom: 5px;">資料載入中...</div>
-            <div class="progress-bar-container">
-                <div id="fp-bar" class="progress-bar"></div>
-            </div>
-            <div id="fp-detail" class="progress-text">載入中...</div>
+            <div id="fp-tips" style="font-size: 0.9em; margin-bottom: 5px;">-</div>
+            <div class="progress-bar-container"><div id="fp-bar" class="progress-bar"></div></div>
+            <div id="fp-detail" class="progress-text">0 / 0</div>
         </div>
-
         <div class="card">
             <h3 class="card-title">新增紀錄</h3>
             <div class="form-group"><label>日期</label><input type="date" id="input-date" class="form-control"></div>
-            <div class="form-group">
-                <label>平台</label>
-                <select id="input-platform" class="form-control">
-                    <option value="Foodpanda">Foodpanda</option>
-                    <option value="UberEats">UberEats</option>
-                </select>
-            </div>
-            <div class="form-group"><label>單數</label><input type="number" id="input-orders" class="form-control"
-                    placeholder="輸入單數"></div>
-            <div class="form-group"><label>收入</label><input type="number" id="input-income" class="form-control"
-                    placeholder="輸入金額"></div>
-            <div class="form-group"><label>工時</label><input type="number" id="input-hours" class="form-control"
-                    placeholder="輸入時數"></div>
-            <button id="btn-save" class="btn-submit" onclick="submitData()">新增紀錄</button>
+            <div class="form-group"><label>平台</label><select id="input-platform" class="form-control"><option value="Foodpanda">Foodpanda</option><option value="UberEats">UberEats</option></select></div>
+            <div class="form-group"><label>單數</label><input type="number" id="input-orders" class="form-control" placeholder="0"></div>
+            <div class="form-group"><label>收入</label><input type="number" id="input-income" class="form-control" placeholder="0"></div>
+            <div class="form-group"><label>工時</label><input type="number" id="input-hours" class="form-control" placeholder="0"></div>
+            <button class="btn-submit" onclick="submitData()">新增紀錄 (儲存至手機)</button>
         </div>
     </div>
 
     <div id="page-history" class="page">
         <h2>歷史紀錄</h2>
-        <div class="card">
-            <div id="history-list">
-                <div style="text-align:center; color:#999; padding: 10px;">資料載入中...</div>
-            </div>
-        </div>
+        <div class="card"><div id="history-list"></div></div>
     </div>
 
     <div id="page-stats" class="page">
@@ -271,95 +75,153 @@
             <button class="tab-btn" onclick="changeStatsMode('月', this)">月</button>
             <button class="tab-btn" onclick="changeStatsMode('年', this)">年</button>
         </div>
-
         <div class="card">
             <h3 id="stats-card-title" class="card-title">今日總計</h3>
             <div class="grid-stats">
-                <div class="stat-box">
-                    <div class="stat-label">總收入</div>
-                    <div id="stats-income" class="stat-value">-</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">總單數</div>
-                    <div id="stats-orders" class="stat-value">-</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">平均時薪</div>
-                    <div id="stats-wage" class="stat-value">-</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">總工時</div>
-                    <div id="stats-hours" class="stat-value">-</div>
-                </div>
+                <div class="stat-box"><div class="stat-label">總收入</div><div id="stats-income" class="stat-value">0</div></div>
+                <div class="stat-box"><div class="stat-label">總單數</div><div id="stats-orders" class="stat-value">0</div></div>
+                <div class="stat-box"><div class="stat-label">平均時薪</div><div id="stats-wage" class="stat-value">0</div></div>
+                <div class="stat-box"><div class="stat-label">總工時</div><div id="stats-hours" class="stat-value">0</div></div>
             </div>
         </div>
-
         <div class="card">
             <h3 class="card-title">平台統計</h3>
-            <div id="platform-list">
-                <div style="text-align:center; color:#999; padding: 10px;">資料載入中...</div>
-            </div>
+            <div id="platform-list"></div>
         </div>
     </div>
 
     <div id="page-settings" class="page">
         <h2>設定</h2>
         <div class="card">
-            <p style="color:#666; text-align:center;">原作者未提及具體需求，暫時留白。</p>
+            <p>目前為離線模式，資料儲存在瀏覽器快取中。</p>
+            <button onclick="clearAllData()" style="color: red; border: 1px solid red; padding: 10px; width: 100%; background: none; border-radius: 4px;">清除所有資料 (不可復原)</button>
         </div>
     </div>
 
     <div class="bottom-nav">
         <div class="nav-item active" onclick="switchPage('page-home', this)">首頁</div>
-        <div class="nav-item" onclick="switchPage('page-history', this)">歷史紀錄</div>
-        <div class="nav-item" onclick="switchPage('page-stats', this)">統計分析</div>
+        <div class="nav-item" onclick="switchPage('page-history', this)">歷史</div>
+        <div class="nav-item" onclick="switchPage('page-stats', this)">統計</div>
         <div class="nav-item" onclick="switchPage('page-settings', this)">設定</div>
     </div>
 
     <script>
-        // 暫存後端傳來的資料
         let apiData = null;
 
-        // 網頁載入完成時執行
-        window.onload = function () {
+        window.onload = function() {
             document.getElementById('input-date').valueAsDate = new Date();
             fetchData();
         };
 
+        // --- 離線儲存邏輯 ---
         function submitData() {
-            const record = {
-                date: document.getElementById('input-date').value,
-                platform: document.getElementById('input-platform').value,
-                orders: Number(document.getElementById('input-orders').value),
-                income: Number(document.getElementById('input-income').value),
-                hours: Number(document.getElementById('input-hours').value),
-                id: Date.now() // 給每筆資料一個唯一 ID
-            };
+            const date = document.getElementById('input-date').value;
+            const platform = document.getElementById('input-platform').value;
+            const orders = Number(document.getElementById('input-orders').value) || 0;
+            const income = Number(document.getElementById('input-income').value) || 0;
+            const hours = Number(document.getElementById('input-hours').value) || 0;
 
-            // 從 LocalStorage 拿舊資料，沒資料就給空陣列
-            let localData = JSON.parse(localStorage.getItem('delivery_records') || '[]');
-            localData.push(record);
+            if(!date) { alert("請選擇日期"); return; }
 
-            // 存回本地
+            const newRecord = { date, platform, orders, income, hours, timestamp: Date.now() };
+            const localData = JSON.parse(localStorage.getItem('delivery_records') || '[]');
+            localData.push(newRecord);
             localStorage.setItem('delivery_records', JSON.stringify(localData));
 
-            alert('資料已儲存在手機本地 (離線可用)');
-            location.reload(); // 重新整理觸發 render
+            alert("儲存成功！");
+            document.getElementById('input-orders').value = '';
+            document.getElementById('input-income').value = '';
+            document.getElementById('input-hours').value = '';
+            fetchData();
         }
 
-
+        // --- 離線計算邏輯 ---
         function fetchData() {
-            // 從本地讀取
             const localData = JSON.parse(localStorage.getItem('delivery_records') || '[]');
+            const now = new Date();
+            const todayStr = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
+            
+            // 計算本週一
+            const cwStart = new Date(now);
+            const dayDiff = (now.getDay() === 0) ? 6 : now.getDay() - 1;
+            cwStart.setDate(now.getDate() - dayDiff);
+            const cwStartStr = cwStart.toLocaleDateString('en-CA');
 
-            // 在這裡寫 JS 邏輯來計算 todayStats, weeklyStats 等 (原本在 .gs 算的)
-            // 計算完後直接呼叫 renderHome(), renderStats(), renderHistory()
-            // ... (邏輯與之前 .gs 類似，只是對象換成 localData 陣列)
+            // 計算 FP 週期 (簡單判定)
+            const pStart = new Date(now);
+            if(now.getDay() >= 1 && now.getDay() <= 3) pStart.setDate(now.getDate() - (now.getDay() - 1));
+            else if(now.getDay() >= 4 && now.getDay() <= 6) pStart.setDate(now.getDate() - (now.getDay() - 4));
+            const pStartStr = pStart.toLocaleDateString('en-CA');
+
+            apiData = {
+                todayStats: { orders: 0, income: 0, hours: 0 },
+                todayPlatforms: { Foodpanda: { orders: 0, income: 0 }, UberEats: { orders: 0, income: 0 } },
+                weeklyStats: { orders: 0, income: 0, hours: 0 },
+                weeklyPlatforms: { Foodpanda: { orders: 0, income: 0 }, UberEats: { orders: 0, income: 0 } },
+                monthlyStats: { orders: 0, income: 0, hours: 0 },
+                monthlyPlatforms: { Foodpanda: { orders: 0, income: 0 }, UberEats: { orders: 0, income: 0 } },
+                yearlyStats: { orders: 0, income: 0, hours: 0 },
+                yearlyPlatforms: { Foodpanda: { orders: 0, income: 0 }, UberEats: { orders: 0, income: 0 } },
+                fpProgress: { accumulatedOrders: 0 },
+                history: [...localData].reverse()
+            };
+
+            localData.forEach(r => {
+                const rDate = new Date(r.date);
+                const pf = r.platform;
+                
+                // 累加邏輯
+                if(r.date === todayStr) { 
+                    apiData.todayStats.orders += r.orders; 
+                    apiData.todayStats.income += r.income; 
+                    apiData.todayStats.hours += r.hours;
+                    apiData.todayPlatforms[pf].orders += r.orders;
+                    apiData.todayPlatforms[pf].income += r.income;
+                }
+                if(r.date >= cwStartStr) {
+                    apiData.weeklyStats.orders += r.orders;
+                    apiData.weeklyStats.income += r.income;
+                    apiData.weeklyStats.hours += r.hours;
+                    apiData.weeklyPlatforms[pf].orders += r.orders;
+                    apiData.weeklyPlatforms[pf].income += r.income;
+                }
+                if(rDate.getMonth() === now.getMonth() && rDate.getFullYear() === now.getFullYear()) {
+                    apiData.monthlyStats.orders += r.orders;
+                    apiData.monthlyStats.income += r.income;
+                    apiData.monthlyStats.hours += r.hours;
+                    apiData.monthlyPlatforms[pf].orders += r.orders;
+                    apiData.monthlyPlatforms[pf].income += r.income;
+                }
+                if(rDate.getFullYear() === now.getFullYear()) {
+                    apiData.yearlyStats.orders += r.orders;
+                    apiData.yearlyStats.income += r.income;
+                    apiData.yearlyStats.hours += r.hours;
+                    apiData.yearlyPlatforms[pf].orders += r.orders;
+                    apiData.yearlyPlatforms[pf].income += r.income;
+                }
+                if(pf === "Foodpanda" && r.date >= pStartStr) {
+                    apiData.fpProgress.accumulatedOrders += r.orders;
+                }
+            });
+
+            // 算時薪
+            const wage = s => s.hourlyWage = s.hours > 0 ? Math.round(s.income/s.hours) : 0;
+            [apiData.todayStats, apiData.weeklyStats, apiData.monthlyStats, apiData.yearlyStats].forEach(wage);
+
+            // 獎金級距 (預設三天)
+            const tiers = now.getDay() === 0 ? [{o:15, b:75}, {o:24, b:150}, {o:35, b:350}] : [{o:40, b:150}, {o:80, b:450}, {o:120, b:1300}];
+            const target = tiers.find(t => apiData.fpProgress.accumulatedOrders < t.o) || {o:0, b:0};
+            apiData.fpProgress.nextTierOrders = target.o;
+            apiData.fpProgress.nextTierBonus = target.b;
+            apiData.fpProgress.ordersNeeded = Math.max(0, target.o - apiData.fpProgress.accumulatedOrders);
+            apiData.fpProgress.mode = now.getDay() === 0 ? "週日" : "三天";
+
+            renderHome();
+            renderHistory();
         }
 
-        // 渲染首頁數據
+        // --- 渲染 UI (對齊之前邏輯) ---
         function renderHome() {
-            if (!apiData) return;
             const s = apiData.todayStats;
             document.getElementById('home-orders').innerText = s.orders;
             document.getElementById('home-income').innerText = s.income;
@@ -367,119 +229,52 @@
             document.getElementById('home-hours').innerText = s.hours;
 
             const fp = apiData.fpProgress;
-            let percent = 100;
-            if (fp.nextTierOrders > 0) {
-                percent = (fp.accumulatedOrders / fp.nextTierOrders) * 100;
-            }
-
             document.getElementById('fp-tips').innerHTML = `距離下一階段獎勵還差 <strong>${fp.ordersNeeded}單</strong> (${fp.mode})`;
-            document.getElementById('fp-bar').style.width = Math.min(percent, 100) + '%';
-            document.getElementById('fp-detail').innerText = `${fp.accumulatedOrders}單 / 目標 ${fp.nextTierOrders}單 (${fp.nextTierBonus}元)`;
+            document.getElementById('fp-bar').style.width = (fp.nextTierOrders > 0 ? (fp.accumulatedOrders/fp.nextTierOrders)*100 : 100) + '%';
+            document.getElementById('fp-detail').innerText = `${fp.accumulatedOrders} / 目標 ${fp.nextTierOrders} (${fp.nextTierBonus}元)`;
         }
 
-        // 渲染統計分析頁面數據
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            list.innerHTML = apiData.history.map(r => `
+                <div class="platform-row">
+                    <div><strong>${r.date}</strong><br><small>${r.platform}</small></div>
+                    <div style="text-align:right"><strong>${r.income}元</strong><br><small>${r.orders}單/${r.hours}h</small></div>
+                </div>
+            `).join('') || '<p style="text-align:center">尚無紀錄</p>';
+        }
+
         function renderStats(mode) {
-            if (!apiData) return;
+            const map = { '日': 'today', '週': 'weekly', '月': 'monthly', '年': 'yearly' };
+            const key = map[mode];
+            const target = apiData[key + 'Stats'];
+            const platforms = apiData[key + 'Platforms'];
 
-            let target = null;
-            let platforms = null;
-            let titleText = '';
-
-            // 判斷當前選擇的模式
-            if (mode === '日') {
-                target = apiData.todayStats;
-                platforms = apiData.todayPlatforms;
-                titleText = '今日總計';
-            } else if (mode === '週') {
-                target = apiData.weeklyStats;
-                platforms = apiData.weeklyPlatforms;
-                titleText = '本週總計';
-            } else if (mode === '月') {
-                target = apiData.monthlyStats;
-                platforms = apiData.monthlyPlatforms;
-                titleText = '本月總計';
-            } else if (mode === '年') {
-                target = apiData.yearlyStats;
-                platforms = apiData.yearlyPlatforms;
-                titleText = '今年總計';
-            }
-
-            // 更新畫面總計區塊
-            document.getElementById('stats-card-title').innerText = titleText;
+            document.getElementById('stats-card-title').innerText = mode + '總計';
             document.getElementById('stats-income').innerText = target.income;
             document.getElementById('stats-orders').innerText = target.orders;
             document.getElementById('stats-wage').innerText = target.hourlyWage;
             document.getElementById('stats-hours').innerText = target.hours;
 
-            // 更新畫面平台區塊
-            const listContainer = document.getElementById('platform-list');
-            listContainer.innerHTML = '';
-
-            for (let key in platforms) {
-                const row = document.createElement('div');
-                row.className = 'platform-row';
-                row.innerHTML = `
-                    <div><strong>${key}</strong></div>
-                    <div>${platforms[key].income} 元 / ${platforms[key].orders} 單</div>
-                `;
-                listContainer.appendChild(row);
-            }
+            document.getElementById('platform-list').innerHTML = Object.keys(platforms).map(p => `
+                <div class="platform-row"><div><strong>${p}</strong></div><div>${platforms[p].income} 元 / ${platforms[p].orders} 單</div></div>
+            `).join('');
         }
 
-        // 處理統計分析的頁籤切換 (日 / 週)
-        function changeStatsMode(mode, btnElement) {
-            document.querySelectorAll('#page-stats .tab-btn').forEach(b => b.classList.remove('active'));
-            btnElement.classList.add('active');
+        function changeStatsMode(mode, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
             renderStats(mode);
         }
 
-        // 處理底部導航列的頁面切換
-        function switchPage(pageId, navElement) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
-            document.getElementById(pageId).classList.add('active');
-            navElement.classList.add('active');
-
-            if (pageId === 'page-stats') {
-                // 切換到統計頁時，預設顯示「日」的數據
-                const dailyBtn = document.querySelector('#page-stats .tab-btn');
-                changeStatsMode('日', dailyBtn);
-            }
+        function switchPage(p, nav) {
+            document.querySelectorAll('.page, .nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(p).classList.add('active');
+            nav.classList.add('active');
+            if(p === 'page-stats') renderStats('日');
         }
 
-        // 渲染歷史紀錄清單
-        function renderHistory() {
-            if (!apiData || !apiData.history) return;
-
-            const listContainer = document.getElementById('history-list');
-            listContainer.innerHTML = ''; // 清空原本的「載入中」文字
-
-            if (apiData.history.length === 0) {
-                listContainer.innerHTML = '<div style="text-align:center; color:#999;">目前尚無紀錄</div>';
-                return;
-            }
-
-            // 跑迴圈產生每一筆資料的 UI
-            apiData.history.forEach(record => {
-                const row = document.createElement('div');
-                // 借用之前寫好的 platform-row CSS 樣式
-                row.className = 'platform-row';
-                row.innerHTML = `
-                    <div style="font-size: 0.9em;">
-                        <strong>${record.date}</strong><br>
-                        <span style="color: #666;">${record.platform}</span>
-                    </div>
-                    <div style="text-align: right;">
-                        <strong style="color: #0d6efd;">${record.income} 元</strong><br>
-                        <span style="font-size: 0.8em; color: #666;">${record.orders} 單 / ${record.hours} 小時</span>
-                    </div>
-                `;
-                listContainer.appendChild(row);
-            });
-        }
-
+        function clearAllData() { if(confirm("確定要刪除所有本地紀錄嗎？")) { localStorage.clear(); location.reload(); } }
     </script>
 </body>
-
 </html>
