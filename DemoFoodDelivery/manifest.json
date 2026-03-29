@@ -1,0 +1,8 @@
+{
+  "name": "外送記帳離線版",
+  "short_name": "外送記帳",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0d6efd"
+}
