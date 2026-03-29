@@ -109,7 +109,11 @@
         let apiData = null;
 
         window.onload = function() {
-            document.getElementById('input-date').valueAsDate = new Date();
+            // 修正時區偏移，確保在台灣凌晨開啟時也能抓到正確的 03/30
+            const now = new Date();
+            const offset = now.getTimezoneOffset() * 60000; // 取得分鐘偏移並轉為毫秒
+            const localISOTime = (new Date(now - offset)).toISOString().slice(0, 10);
+            document.getElementById('input-date').value = localISOTime;
             fetchData();
         };
 
@@ -137,88 +141,100 @@
 
         // --- 離線計算邏輯 ---
         function fetchData() {
-            const localData = JSON.parse(localStorage.getItem('delivery_records') || '[]');
-            const now = new Date();
-            const todayStr = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
-            
-            // 計算本週一
-            const cwStart = new Date(now);
-            const dayDiff = (now.getDay() === 0) ? 6 : now.getDay() - 1;
-            cwStart.setDate(now.getDate() - dayDiff);
-            const cwStartStr = cwStart.toLocaleDateString('en-CA');
+    const localData = JSON.parse(localStorage.getItem('delivery_records') || '[]');
+    
+    // 建立台灣時間格式化工具 (確保 YYYY-MM-DD 格式且時區正確)
+    const tf = new Intl.DateTimeFormat('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Taipei' });
+    const formatToDateStr = (date) => tf.format(date).replace(/\//g, '-');
 
-            // 計算 FP 週期 (簡單判定)
-            const pStart = new Date(now);
-            if(now.getDay() >= 1 && now.getDay() <= 3) pStart.setDate(now.getDate() - (now.getDay() - 1));
-            else if(now.getDay() >= 4 && now.getDay() <= 6) pStart.setDate(now.getDate() - (now.getDay() - 4));
-            const pStartStr = pStart.toLocaleDateString('en-CA');
+    const now = new Date();
+    const todayStr = formatToDateStr(now);
+    
+    // 1. 計算本週一 (台灣時間)
+    const cwStart = new Date(now);
+    const dayDiff = (now.getDay() === 0) ? 6 : now.getDay() - 1;
+    cwStart.setDate(now.getDate() - dayDiff);
+    const cwStartStr = formatToDateStr(cwStart);
 
-            apiData = {
-                todayStats: { orders: 0, income: 0, hours: 0 },
-                todayPlatforms: { Foodpanda: { orders: 0, income: 0 }, UberEats: { orders: 0, income: 0 } },
-                weeklyStats: { orders: 0, income: 0, hours: 0 },
-                weeklyPlatforms: { Foodpanda: { orders: 0, income: 0 }, UberEats: { orders: 0, income: 0 } },
-                monthlyStats: { orders: 0, income: 0, hours: 0 },
-                monthlyPlatforms: { Foodpanda: { orders: 0, income: 0 }, UberEats: { orders: 0, income: 0 } },
-                yearlyStats: { orders: 0, income: 0, hours: 0 },
-                yearlyPlatforms: { Foodpanda: { orders: 0, income: 0 }, UberEats: { orders: 0, income: 0 } },
-                fpProgress: { accumulatedOrders: 0 },
-                history: [...localData].reverse()
-            };
+    // 2. 計算 FP 週期 (台灣時間)
+    const pStart = new Date(now);
+    if(now.getDay() >= 1 && now.getDay() <= 3) pStart.setDate(now.getDate() - (now.getDay() - 1));
+    else if(now.getDay() >= 4 && now.getDay() <= 6) pStart.setDate(now.getDate() - (now.getDay() - 4));
+    const pStartStr = formatToDateStr(pStart);
 
-            localData.forEach(r => {
-                const rDate = new Date(r.date);
-                const pf = r.platform;
-                
-                // 累加邏輯
-                if(r.date === todayStr) { 
-                    apiData.todayStats.orders += r.orders; 
-                    apiData.todayStats.income += r.income; 
-                    apiData.todayStats.hours += r.hours;
-                    apiData.todayPlatforms[pf].orders += r.orders;
-                    apiData.todayPlatforms[pf].income += r.income;
-                }
-                if(r.date >= cwStartStr) {
-                    apiData.weeklyStats.orders += r.orders;
-                    apiData.weeklyStats.income += r.income;
-                    apiData.weeklyStats.hours += r.hours;
-                    apiData.weeklyPlatforms[pf].orders += r.orders;
-                    apiData.weeklyPlatforms[pf].income += r.income;
-                }
-                if(rDate.getMonth() === now.getMonth() && rDate.getFullYear() === now.getFullYear()) {
-                    apiData.monthlyStats.orders += r.orders;
-                    apiData.monthlyStats.income += r.income;
-                    apiData.monthlyStats.hours += r.hours;
-                    apiData.monthlyPlatforms[pf].orders += r.orders;
-                    apiData.monthlyPlatforms[pf].income += r.income;
-                }
-                if(rDate.getFullYear() === now.getFullYear()) {
-                    apiData.yearlyStats.orders += r.orders;
-                    apiData.yearlyStats.income += r.income;
-                    apiData.yearlyStats.hours += r.hours;
-                    apiData.yearlyPlatforms[pf].orders += r.orders;
-                    apiData.yearlyPlatforms[pf].income += r.income;
-                }
-                if(pf === "Foodpanda" && r.date >= pStartStr) {
-                    apiData.fpProgress.accumulatedOrders += r.orders;
-                }
-            });
+    // --- 初始化與累計邏輯 (保持原樣) ---
+    apiData = {
+        todayStats: { orders: 0, income: 0, hours: 0 },
+        todayPlatforms: { Foodpanda: { orders: 0, income: 0 }, UberEats: { orders: 0, income: 0 } },
+        weeklyStats: { orders: 0, income: 0, hours: 0 },
+        weeklyPlatforms: { Foodpanda: { orders: 0, income: 0 }, UberEats: { orders: 0, income: 0 } },
+        monthlyStats: { orders: 0, income: 0, hours: 0 },
+        monthlyPlatforms: { Foodpanda: { orders: 0, income: 0 }, UberEats: { orders: 0, income: 0 } },
+        yearlyStats: { orders: 0, income: 0, hours: 0 },
+        yearlyPlatforms: { Foodpanda: { orders: 0, income: 0 }, UberEats: { orders: 0, income: 0 } },
+        fpProgress: { accumulatedOrders: 0 },
+        history: []
+    };
 
-            // 算時薪
-            const wage = s => s.hourlyWage = s.hours > 0 ? Math.round(s.income/s.hours) : 0;
-            [apiData.todayStats, apiData.weeklyStats, apiData.monthlyStats, apiData.yearlyStats].forEach(wage);
-
-            // 獎金級距 (預設三天)
-            const tiers = now.getDay() === 0 ? [{o:15, b:75}, {o:24, b:150}, {o:35, b:350}] : [{o:40, b:150}, {o:80, b:450}, {o:120, b:1300}];
-            const target = tiers.find(t => apiData.fpProgress.accumulatedOrders < t.o) || {o:0, b:0};
-            apiData.fpProgress.nextTierOrders = target.o;
-            apiData.fpProgress.nextTierBonus = target.b;
-            apiData.fpProgress.ordersNeeded = Math.max(0, target.o - apiData.fpProgress.accumulatedOrders);
-            apiData.fpProgress.mode = now.getDay() === 0 ? "週日" : "三天";
-
-            renderHome();
-            renderHistory();
+    localData.forEach(r => {
+        const rDateObj = new Date(r.date);
+        const pf = r.platform;
+        
+        if(r.date === todayStr) { 
+            apiData.todayStats.orders += r.orders; 
+            apiData.todayStats.income += r.income; 
+            apiData.todayStats.hours += r.hours;
+            apiData.todayPlatforms[pf].orders += r.orders;
+            apiData.todayPlatforms[pf].income += r.income;
         }
+        if(r.date >= cwStartStr) {
+            apiData.weeklyStats.orders += r.orders;
+            apiData.weeklyStats.income += r.income;
+            apiData.weeklyStats.hours += r.hours;
+            apiData.weeklyPlatforms[pf].orders += r.orders;
+            apiData.weeklyPlatforms[pf].income += r.income;
+        }
+        if(rDateObj.getMonth() === now.getMonth() && rDateObj.getFullYear() === now.getFullYear()) {
+            apiData.monthlyStats.orders += r.orders;
+            apiData.monthlyStats.income += r.income;
+            apiData.monthlyStats.hours += r.hours;
+            apiData.monthlyPlatforms[pf].orders += r.orders;
+            apiData.monthlyPlatforms[pf].income += r.income;
+        }
+        if(rDateObj.getFullYear() === now.getFullYear()) {
+            apiData.yearlyStats.orders += r.orders;
+            apiData.yearlyStats.income += r.income;
+            apiData.yearlyStats.hours += r.hours;
+            apiData.yearlyPlatforms[pf].orders += r.orders;
+            apiData.yearlyPlatforms[pf].income += r.income;
+        }
+        if(pf === "Foodpanda" && r.date >= pStartStr) {
+            apiData.fpProgress.accumulatedOrders += r.orders;
+        }
+    });
+
+    // --- 歷史紀錄排序邏輯 ---
+    // 規則：優先比對接單日期 (date) 由新到舊，若日期相同，則比對建檔時間 (timestamp) 由新到舊
+    apiData.history = [...localData].sort((a, b) => {
+        if (b.date !== a.date) {
+            return b.date.localeCompare(a.date); // 日期由大到小
+        }
+        return b.timestamp - a.timestamp; // 建檔時間由大到小
+    });
+
+    // 計算時薪與 FP 級距 (省略重複邏輯...)
+    const wage = s => s.hourlyWage = s.hours > 0 ? Math.round(s.income/s.hours) : 0;
+    [apiData.todayStats, apiData.weeklyStats, apiData.monthlyStats, apiData.yearlyStats].forEach(wage);
+    const tiers = now.getDay() === 0 ? [{o:15, b:75}, {o:24, b:150}, {o:35, b:350}] : [{o:40, b:150}, {o:80, b:450}, {o:120, b:1300}];
+    const target = tiers.find(t => apiData.fpProgress.accumulatedOrders < t.o) || {o:0, b:0};
+    apiData.fpProgress.nextTierOrders = target.o;
+    apiData.fpProgress.nextTierBonus = target.b;
+    apiData.fpProgress.ordersNeeded = Math.max(0, target.o - apiData.fpProgress.accumulatedOrders);
+    apiData.fpProgress.mode = now.getDay() === 0 ? "週日" : "三天";
+
+    renderHome();
+    renderHistory();
+}
 
         // --- 渲染 UI (對齊之前邏輯) ---
         function renderHome() {
@@ -234,15 +250,27 @@
             document.getElementById('fp-detail').innerText = `${fp.accumulatedOrders} / 目標 ${fp.nextTierOrders} (${fp.nextTierBonus}元)`;
         }
 
-        function renderHistory() {
-            const list = document.getElementById('history-list');
-            list.innerHTML = apiData.history.map(r => `
-                <div class="platform-row">
-                    <div><strong>${r.date}</strong><br><small>${r.platform}</small></div>
-                    <div style="text-align:right"><strong>${r.income}元</strong><br><small>${r.orders}單/${r.hours}h</small></div>
+        // --- 歷史紀錄渲染 (加入建檔時間顯示) ---
+function renderHistory() {
+    const list = document.getElementById('history-list');
+    list.innerHTML = apiData.history.map(r => {
+        // 將建檔時間 timestamp 轉為可讀的 01:06 格式
+        const createTime = r.timestamp ? new Date(r.timestamp).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--';
+        
+        return `
+            <div class="platform-row" style="align-items: center;">
+                <div style="flex: 1;">
+                    <strong>${r.date}</strong> <span style="font-size: 0.75em; color: #999;">(建檔:${createTime})</span><br>
+                    <small style="color: #666;">${r.platform}</small>
                 </div>
-            `).join('') || '<p style="text-align:center">尚無紀錄</p>';
-        }
+                <div style="text-align:right">
+                    <strong style="color: #28a745;">${r.income}元</strong><br>
+                    <small>${r.orders}單 / ${r.hours}h</small>
+                </div>
+            </div>
+        `;
+    }).join('') || '<p style="text-align:center; padding: 20px;">尚無紀錄</p>';
+}
 
         function renderStats(mode) {
             const map = { '日': 'today', '週': 'weekly', '月': 'monthly', '年': 'yearly' };
