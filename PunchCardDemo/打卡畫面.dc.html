@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans TC', -apple-system, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background: #c7ced8;
+  }
+  @keyframes ovfade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes sheetup { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes alertpop { from { opacity: 0; transform: scale(.86); } to { opacity: 1; transform: scale(1); } }
+</style>
+</helmet>
+
+<template id="__bundler_thumbnail" data-bg-color="#dfe5ee">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#dfe5ee"/>
+    <rect x="480" y="150" width="240" height="500" rx="46" fill="#0c1220"/>
+    <rect x="492" y="162" width="216" height="476" rx="36" fill="#f5f7fb"/>
+    <rect x="556" y="182" width="88" height="20" rx="10" fill="#0c1220"/>
+    <rect x="516" y="250" width="120" height="26" rx="6" fill="#131b2c"/>
+    <rect x="516" y="300" width="168" height="70" rx="14" fill="#ffffff"/>
+    <rect x="536" y="322" width="90" height="26" rx="6" fill="#2f5aa8"/>
+    <rect x="516" y="560" width="168" height="46" rx="14" fill="#2f5aa8"/>
+    <circle cx="600" cy="470" r="30" fill="#e7f5ee"/>
+    <path d="M586 470l10 10 18-20" stroke="#2f9e6b" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</template>
+
+<!-- ============================ TURN 2 — legacy native style ============================ -->
+<section style="padding:64px 56px 48px;">
+  <div id="2a" style="display:flex;flex-direction:column;gap:20px;width:402px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:26px;padding:0 10px;border-radius:8px;background:#131b2c;color:#fff;font-size:13px;font-weight:700;letter-spacing:.5px;">2a</span>
+      <span style="font-size:14px;font-weight:600;color:#3a4658;letter-spacing:.3px;">舊式原生風格 · 內勤打卡</span>
+    </div>
+
+    <div style="width:402px;height:874px;border-radius:52px;background:#0c1220;position:relative;box-shadow:0 40px 90px rgba(20,32,58,.28), 0 0 0 12px #10182a, 0 0 0 13px rgba(255,255,255,.06);overflow:hidden;">
+      <div style="position:absolute;inset:6px;border-radius:46px;overflow:hidden;background:linear-gradient(180deg,#ffffff 0%,#f3fafc 46%,#e3f3f8 100%);display:flex;flex-direction:column;">
+        <!-- flowing wave texture (lower area) -->
+        <svg style="position:absolute;left:0;right:0;bottom:0;width:100%;height:56%;pointer-events:none;z-index:1;" viewBox="0 0 402 520" preserveAspectRatio="none" fill="none">
+          <path d="M-20 250 C 120 200, 260 320, 430 230" stroke="#dff2f7" stroke-width="1" stroke-opacity="0.6"/>
+          <path d="M-20 300 C 120 250, 260 360, 430 280" stroke="#ffffff" stroke-width="1.6" stroke-opacity="0.75"/>
+          <path d="M-20 345 C 120 292, 260 405, 430 320" stroke="#ffffff" stroke-width="1.2" stroke-opacity="0.55"/>
+          <path d="M-20 388 C 140 322, 280 448, 430 362" stroke="#ffffff" stroke-width="1" stroke-opacity="0.45"/>
+          <path d="M-20 432 C 140 370, 280 490, 430 410" stroke="#eaf6f9" stroke-width="1" stroke-opacity="0.5"/>
+          <circle cx="92" cy="330" r="1.6" fill="#ffffff" opacity="0.85"/>
+          <circle cx="300" cy="378" r="1.5" fill="#ffffff" opacity="0.7"/>
+          <circle cx="205" cy="300" r="1.2" fill="#ffffff" opacity="0.7"/>
+          <circle cx="348" cy="302" r="1.2" fill="#ffffff" opacity="0.6"/>
+          <circle cx="140" cy="410" r="1.3" fill="#ffffff" opacity="0.65"/>
+        </svg>
+
+        <!-- status bar (black) -->
+        <div style="height:54px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:20px 34px 0;position:relative;z-index:6;background:#000;">
+          <span style="font-size:16px;font-weight:600;color:#fff;letter-spacing:.3px;font-variant-numeric:tabular-nums;">{{ statusTime }}</span>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="7" width="3" height="5" rx="0.7" fill="#fff"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="0.7" fill="#fff"/><rect x="9" y="2" width="3" height="10" rx="0.7" fill="#fff"/><rect x="13.5" y="0" width="3" height="12" rx="0.7" fill="#fff"/></svg>
+            <svg width="16" height="12" viewBox="0 0 17 12"><path d="M8.5 3.2C10.8 3.2 12.9 4.1 14.4 5.6L15.5 4.5C13.7 2.7 11.2 1.5 8.5 1.5C5.8 1.5 3.3 2.7 1.5 4.5L2.6 5.6C4.1 4.1 6.2 3.2 8.5 3.2Z" fill="#fff"/><path d="M8.5 6.8C9.9 6.8 11.1 7.3 12 8.2L13.1 7.1C11.8 5.9 10.2 5.1 8.5 5.1C6.8 5.1 5.2 5.9 3.9 7.1L5 8.2C5.9 7.3 7.1 6.8 8.5 6.8Z" fill="#fff"/><circle cx="8.5" cy="10.5" r="1.5" fill="#fff"/></svg>
+            <svg width="26" height="13" viewBox="0 0 28 13"><rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke="#fff" stroke-opacity="0.5" fill="none"/><rect x="2" y="2" width="16" height="9" rx="2" fill="#fff"/><path d="M25 4.5V8.5C25.8 8.2 26.5 7.2 26.5 6.5C26.5 5.8 25.8 4.8 25 4.5Z" fill="#fff" fill-opacity="0.55"/></svg>
+          </div>
+        </div>
+
+        <!-- nav bar -->
+        <div style="position:relative;z-index:5;height:50px;flex:none;display:flex;align-items:center;justify-content:center;padding:0 16px;">
+          <div style="position:absolute;left:16px;display:flex;align-items:center;gap:2px;color:#1a72e8;">
+            <svg width="12" height="20" viewBox="0 0 12 20" fill="none"><path d="M10 2L2 10l8 8" stroke="#1a72e8" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span style="font-size:19px;font-weight:600;color:#1a72e8;letter-spacing:.5px;">各項考勤</span>
+          </div>
+          <span style="font-size:20px;font-weight:700;color:#1c2431;letter-spacing:1px;">內勤打卡</span>
+        </div>
+
+        <!-- content -->
+        <div style="position:relative;z-index:5;flex:1;display:flex;flex-direction:column;padding:20px 20px 0;">
+          <!-- date + time cards -->
+          <div style="display:flex;gap:14px;margin-bottom:20px;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+              <div style="background:linear-gradient(180deg,#54bfce,#43adbe);border-radius:8px;padding:11px 0;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,.12);">
+                <span style="font-size:19px;font-weight:700;color:#fff;letter-spacing:3px;">今天日期</span>
+              </div>
+              <div style="background:#fff;border-radius:8px;padding:15px 0 17px;text-align:center;box-shadow:0 2px 6px rgba(40,70,90,.08);">
+                <div style="font-size:21px;font-style:italic;font-weight:500;color:#2b3543;letter-spacing:.5px;">{{ legacyMonth }}</div>
+                <div style="font-size:54px;font-style:italic;font-weight:600;color:#1c2431;line-height:1.05;letter-spacing:1px;font-variant-numeric:tabular-nums;">{{ legacyDay }}</div>
+                <div style="font-size:21px;font-style:italic;font-weight:500;color:#2b3543;letter-spacing:.5px;margin-top:2px;">{{ legacyYear }}</div>
+              </div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+              <div style="background:linear-gradient(180deg,#54bfce,#43adbe);border-radius:8px;padding:11px 0;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,.12);">
+                <span style="font-size:19px;font-weight:700;color:#fff;letter-spacing:3px;">現在時間</span>
+              </div>
+              <div style="background:#fff;border-radius:8px;flex:1;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(40,70,90,.08);">
+                <span style="font-size:46px;font-style:italic;font-weight:700;color:#3b8fef;letter-spacing:1px;font-variant-numeric:tabular-nums;">{{ timeHM }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 打卡種類 -->
+          <div style="margin-bottom:18px;">
+            <div style="background:linear-gradient(180deg,#54bfce,#43adbe);border-radius:8px;padding:10px 0;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,.12);">
+              <span style="font-size:18px;font-weight:700;color:#fff;letter-spacing:3px;">打卡種類</span>
+            </div>
+            <div style="background:#fff;border-radius:8px;margin-top:8px;padding:10px 16px 6px;box-shadow:0 2px 6px rgba(40,70,90,.08);overflow:hidden;height:96px;">
+              <div style="background:#ececee;border-radius:8px;padding:8px 0;text-align:center;">
+                <span style="font-size:23px;font-weight:500;color:#1c2431;letter-spacing:1px;">上班 1</span>
+              </div>
+              <div style="text-align:center;padding-top:7px;">
+                <span style="font-size:22px;font-weight:400;color:#9aa3ad;letter-spacing:1px;">下班 1</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 現在位置 -->
+          <div>
+            <div style="background:linear-gradient(180deg,#54bfce,#43adbe);border-radius:8px;padding:10px 0;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,.12);">
+              <span style="font-size:18px;font-weight:700;color:#fff;letter-spacing:3px;">現在位置</span>
+            </div>
+            <div style="background:#fff;border-radius:8px;margin-top:8px;padding:12px 0;text-align:center;box-shadow:0 2px 6px rgba(40,70,90,.08);">
+              <span style="font-size:18px;font-style:italic;font-weight:500;color:#2b3543;letter-spacing:.3px;">經度:120.31185, 緯度:22.65635</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- bottom action bar -->
+        <div style="position:relative;z-index:5;flex:none;display:flex;align-items:center;gap:16px;padding:14px 20px 18px;">
+          <span style="background:linear-gradient(180deg,#54bfce,#43adbe);border-radius:8px;padding:11px 15px;font-size:18px;font-weight:700;color:#fff;letter-spacing:2px;box-shadow:0 2px 4px rgba(0,0,0,.12);">跨夜</span>
+          <div style="width:56px;height:32px;border-radius:100px;background:#e6eaee;border:1px solid rgba(0,0,0,.1);position:relative;flex:none;">
+            <div style="position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);"></div>
+          </div>
+          <button onClick="{{ onPunchB }}" style="flex:1;height:60px;border:none;border-radius:10px;background:linear-gradient(180deg,#7ab2ec,#5f96de);color:#fff;font-family:inherit;font-size:21px;font-weight:700;letter-spacing:3px;cursor:pointer;text-decoration:underline;text-underline-offset:4px;box-shadow:0 3px 7px rgba(60,110,200,.3);" style-active="transform:translateY(1px);">打卡確認</button>
+        </div>
+
+        <!-- footer -->
+        <div style="position:relative;z-index:5;flex:none;height:52px;background:#d6f0f6;display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:17px;font-weight:600;color:#2b3543;letter-spacing:2px;text-decoration:underline;text-underline-offset:3px;">選單</span>
+        </div>
+
+        <!-- home indicator -->
+        <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:100px;background:rgba(12,18,32,.28);z-index:7;"></div>
+
+        <!-- ==== native-style alert ==== -->
+        <sc-if value="{{ isOpenB }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:0 26px;">
+            <div onClick="{{ onCloseB }}" style="position:absolute;inset:0;background:rgba(0,0,0,.28);animation:ovfade .2s ease both;"></div>
+            <div style="position:relative;width:100%;max-width:300px;background:rgba(249,249,250,.94);backdrop-filter:blur(20px);border-radius:15px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.3);animation:alertpop .26s cubic-bezier(.22,1,.36,1) both;max-height:80%;display:flex;flex-direction:column;">
+              <div style="padding:20px 18px 16px;overflow:auto;">
+                <div style="text-align:center;font-size:19px;font-weight:700;color:#1a1a1a;margin-bottom:9px;letter-spacing:.5px;">提示</div>
+                <p style="margin:0;font-size:15px;line-height:1.7;color:#1a1a1a;text-align:center;letter-spacing:.2px;">打卡成功！您的下班打卡時間為：{{ agreedStr }}，實際打卡時間為：{{ actualStr }}，已超過公司設定之下班打卡合理時間範圍。依公司出勤管理規則，超過約定下班後的時間範圍，為出勤異常。系統將先暫以處理私人事務停留處理，並自動協助將本次約定的下班時間，依補打卡方式登錄至約定下班時間內。若您實際延後的打卡時間是因執行公務或加班，請依公司規定提出加班申請；若對本次出勤紀錄有任何疑義，請透過聯繫函向公司反映，感謝您的配合。</p>
+              </div>
+              <button onClick="{{ onCloseB }}" style="flex:none;border:none;border-top:1px solid rgba(0,0,0,.12);background:transparent;height:46px;color:#1a72e8;font-family:inherit;font-size:18px;font-weight:600;letter-spacing:1px;cursor:pointer;" style-active="background:rgba(0,0,0,.05);">OK</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ TURN 1 — polished blue-grey style ============================ -->
+<section style="padding:0 56px 64px;">
+  <div id="1a" style="display:flex;flex-direction:column;gap:20px;width:402px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:26px;padding:0 10px;border-radius:8px;background:#131b2c;color:#fff;font-size:13px;font-weight:700;letter-spacing:.5px;">1a</span>
+      <span style="font-size:14px;font-weight:600;color:#3a4658;letter-spacing:.3px;">現代企業風格 · 出勤打卡</span>
+    </div>
+
+    <div style="width:402px;height:874px;border-radius:52px;background:#0c1220;position:relative;box-shadow:0 40px 90px rgba(20,32,58,.28), 0 0 0 12px #10182a, 0 0 0 13px rgba(255,255,255,.06);overflow:hidden;">
+      <div style="position:absolute;inset:6px;border-radius:46px;overflow:hidden;background:linear-gradient(180deg,#f5f7fb 0%,#eef2f8 100%);display:flex;flex-direction:column;">
+        <!-- status bar -->
+        <div style="height:54px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:20px 34px 0;position:relative;z-index:5;">
+          <span style="font-size:16px;font-weight:600;color:#0c1220;letter-spacing:.3px;font-variant-numeric:tabular-nums;">{{ statusTime }}</span>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="7" width="3" height="5" rx="0.7" fill="#0c1220"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="0.7" fill="#0c1220"/><rect x="9" y="2" width="3" height="10" rx="0.7" fill="#0c1220"/><rect x="13.5" y="0" width="3" height="12" rx="0.7" fill="#0c1220"/></svg>
+            <svg width="16" height="12" viewBox="0 0 17 12"><path d="M8.5 3.2C10.8 3.2 12.9 4.1 14.4 5.6L15.5 4.5C13.7 2.7 11.2 1.5 8.5 1.5C5.8 1.5 3.3 2.7 1.5 4.5L2.6 5.6C4.1 4.1 6.2 3.2 8.5 3.2Z" fill="#0c1220"/><path d="M8.5 6.8C9.9 6.8 11.1 7.3 12 8.2L13.1 7.1C11.8 5.9 10.2 5.1 8.5 5.1C6.8 5.1 5.2 5.9 3.9 7.1L5 8.2C5.9 7.3 7.1 6.8 8.5 6.8Z" fill="#0c1220"/><circle cx="8.5" cy="10.5" r="1.5" fill="#0c1220"/></svg>
+            <svg width="26" height="13" viewBox="0 0 27 13"><rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke="#0c1220" stroke-opacity="0.35" fill="none"/><rect x="2" y="2" width="19" height="9" rx="2" fill="#0c1220"/><path d="M25 4.5V8.5C25.8 8.2 26.5 7.2 26.5 6.5C26.5 5.8 25.8 4.8 25 4.5Z" fill="#0c1220" fill-opacity="0.4"/></svg>
+          </div>
+        </div>
+        <div style="position:absolute;top:14px;left:50%;transform:translateX(-50%);width:118px;height:34px;border-radius:20px;background:#0c1220;z-index:6;"></div>
+
+        <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;padding:22px 26px 0;">
+          <div style="display:flex;align-items:center;gap:11px;margin-bottom:26px;">
+            <div style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#2f5aa8,#254a8f);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(37,74,143,.28);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 20V7l8-4 8 4v13" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 20v-5h6v5" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><path d="M3.5 20h17" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <span style="font-size:14.5px;font-weight:700;color:#1a2438;letter-spacing:.2px;">宏庭資訊股份有限公司</span>
+              <span style="font-size:11.5px;font-weight:400;color:#8a94a6;letter-spacing:.3px;">出勤管理系統 · 台北總部</span>
+            </div>
+          </div>
+
+          <h1 style="margin:0 0 18px;font-size:29px;font-weight:900;color:#131b2c;letter-spacing:.4px;">出勤打卡</h1>
+
+          <div style="background:#fff;border-radius:24px;padding:28px 26px 24px;box-shadow:0 12px 30px rgba(28,44,80,.09), 0 1px 0 rgba(255,255,255,.9) inset;border:1px solid rgba(28,44,80,.05);">
+            <span style="font-size:12px;font-weight:600;color:#96a0b3;letter-spacing:1.4px;text-transform:uppercase;">目前時間</span>
+            <div style="display:flex;align-items:baseline;gap:2px;margin:8px 0 6px;">
+              <span style="font-size:58px;font-weight:300;color:#131b2c;line-height:1;letter-spacing:1px;font-variant-numeric:tabular-nums;">{{ timeHM }}</span>
+              <span style="font-size:26px;font-weight:400;color:#8a94a6;line-height:1;letter-spacing:.5px;font-variant-numeric:tabular-nums;">:{{ ss }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:9px;">
+              <span style="font-size:15px;font-weight:500;color:#42506a;letter-spacing:.3px;">{{ dateFull }}</span>
+              <span style="width:4px;height:4px;border-radius:50%;background:#c3cbd8;"></span>
+              <span style="font-size:15px;font-weight:500;color:#42506a;letter-spacing:.3px;">{{ weekday }}</span>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;margin-top:16px;">
+            <div style="flex:1;background:rgba(255,255,255,.62);border:1px solid rgba(28,44,80,.06);border-radius:16px;padding:14px 16px;">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px;">
+                <span style="width:7px;height:7px;border-radius:50%;background:#2f9e6b;"></span>
+                <span style="font-size:11.5px;font-weight:600;color:#8a94a6;letter-spacing:.5px;">上班</span>
+              </div>
+              <div style="font-size:19px;font-weight:700;color:#1a2438;font-variant-numeric:tabular-nums;">08:32</div>
+              <div style="font-size:11px;font-weight:500;color:#2f9e6b;margin-top:2px;">已打卡</div>
+            </div>
+            <div style="flex:1;background:rgba(255,255,255,.62);border:1px solid rgba(28,44,80,.06);border-radius:16px;padding:14px 16px;">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px;">
+                <span style="width:7px;height:7px;border-radius:50%;background:#c3cbd8;"></span>
+                <span style="font-size:11.5px;font-weight:600;color:#8a94a6;letter-spacing:.5px;">下班</span>
+              </div>
+              <div style="font-size:19px;font-weight:700;color:#1a2438;font-variant-numeric:tabular-nums;">18:00</div>
+              <div style="font-size:11px;font-weight:500;color:#96a0b3;margin-top:2px;">約定時間</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex:none;padding:16px 26px 30px;background:linear-gradient(180deg,rgba(238,242,248,0) 0%,#eef2f8 34%);">
+          <button onClick="{{ onPunchA }}" style="width:100%;height:60px;border:none;border-radius:20px;background:linear-gradient(135deg,#2f5aa8 0%,#274a90 100%);color:#fff;font-family:inherit;font-size:18px;font-weight:700;letter-spacing:3px;cursor:pointer;box-shadow:0 12px 26px rgba(37,74,143,.34);display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .12s ease, box-shadow .12s ease;" style-active="transform:translateY(2px);box-shadow:0 6px 14px rgba(37,74,143,.3);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="1.8"/><path d="M12 7.5V12l3 2" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            下班打卡
+          </button>
+          <p style="margin:12px 0 0;text-align:center;font-size:12px;font-weight:400;color:#96a0b3;letter-spacing:.3px;">請於約定時間內完成打卡，逾時將列為出勤異常</p>
+        </div>
+
+        <div style="position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:100px;background:rgba(12,18,32,.22);z-index:7;"></div>
+
+        <sc-if value="{{ isOpenA }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;">
+            <div onClick="{{ onCloseA }}" style="position:absolute;inset:0;background:rgba(12,18,32,.42);backdrop-filter:blur(2px);animation:ovfade .22s ease both;"></div>
+            <div style="position:relative;background:#fff;border-radius:32px 32px 46px 46px;padding:14px 26px 30px;box-shadow:0 -14px 50px rgba(12,18,32,.24);animation:sheetup .34s cubic-bezier(.22,1,.36,1) both;max-height:94%;overflow:auto;">
+              <div style="width:40px;height:5px;border-radius:100px;background:#e2e7ef;margin:0 auto 20px;"></div>
+              <div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:18px;">
+                <div style="width:64px;height:64px;border-radius:50%;background:#e7f5ee;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#2f9e6b"/><path d="M7.5 12.4l3 3 6-6.4" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <h2 style="margin:0;font-size:23px;font-weight:900;color:#131b2c;letter-spacing:.5px;">打卡成功！</h2>
+              </div>
+              <div style="background:#f5f7fb;border:1px solid rgba(28,44,80,.06);border-radius:18px;padding:6px 18px;margin-bottom:14px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid rgba(28,44,80,.07);">
+                  <span style="font-size:13.5px;font-weight:500;color:#8a94a6;">約定下班時間</span>
+                  <span style="font-size:14.5px;font-weight:600;color:#42506a;font-variant-numeric:tabular-nums;">{{ agreedStr }}</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;">
+                  <span style="font-size:13.5px;font-weight:500;color:#8a94a6;">實際打卡時間</span>
+                  <span style="font-size:14.5px;font-weight:700;color:#b0741c;font-variant-numeric:tabular-nums;">{{ actualStr }}</span>
+                </div>
+              </div>
+              <div style="display:inline-flex;align-items:center;gap:6px;background:#fbf1de;border:1px solid #f0dcb4;border-radius:10px;padding:6px 11px;margin-bottom:14px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 3l9 16H3l9-16z" fill="#e8a53a"/><path d="M12 10v4" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="#fff"/></svg>
+                <span style="font-size:12.5px;font-weight:700;color:#a56a12;letter-spacing:.4px;">出勤異常</span>
+              </div>
+              <p style="margin:0 0 12px;font-size:13.5px;line-height:1.85;color:#42506a;letter-spacing:.2px;text-align:justify;">您本次實際打卡時間已超過公司設定之正常下班打卡時間範圍，系統已列為出勤異常，並暫時先以處理私人事務，並依約定下班時間以補打卡方式登錄。</p>
+              <p style="margin:0 0 24px;font-size:13.5px;line-height:1.85;color:#42506a;letter-spacing:.2px;text-align:justify;">如實際係因執行公務或加班，請依規定提出加班申請；如對本次出勤紀錄有疑義，請透過聯繫函向公司反映，謝謝您的配合。</p>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <button onClick="{{ onCloseA }}" style="width:100%;height:52px;border:none;border-radius:16px;background:linear-gradient(135deg,#2f5aa8 0%,#274a90 100%);color:#fff;font-family:inherit;font-size:16px;font-weight:700;letter-spacing:2px;cursor:pointer;box-shadow:0 8px 18px rgba(37,74,143,.28);" style-active="transform:translateY(1px);">我知道了</button>
+                <button onClick="{{ onCloseA }}" style="width:100%;height:48px;border:1px solid rgba(28,44,80,.14);border-radius:16px;background:#fff;color:#42506a;font-family:inherit;font-size:15px;font-weight:600;letter-spacing:1px;cursor:pointer;" style-active="background:#f5f7fb;">提出加班申請</button>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { now: new Date(), isOpenA: false, isOpenB: false, punchedAt: null };
+
+  componentDidMount() {
+    this.timer = setInterval(() => {
+      if (!this.state.isOpenA && !this.state.isOpenB) this.setState({ now: new Date() });
+    }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this.timer); }
+
+  renderVals() {
+    const p = (n) => String(n).padStart(2, '0');
+    const wd = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+    const n = this.state.now;
+    const h = n.getHours(), m = n.getMinutes(), s = n.getSeconds();
+
+    const punch = this.state.punchedAt || n;
+    const py = punch.getFullYear(), pmo = punch.getMonth() + 1, pd = punch.getDate();
+    const dateSlash = `${py}/${p(pmo)}/${p(pd)}`;
+
+    return {
+      statusTime: `${h}:${p(m)}`,
+      timeHM: `${p(h)}:${p(m)}`,
+      ss: p(s),
+      dateFull: `${n.getFullYear()}年${n.getMonth() + 1}月${n.getDate()}日`,
+      weekday: wd[n.getDay()],
+      legacyMonth: `${p(n.getMonth() + 1)}月`,
+      legacyDay: `${p(n.getDate())}`,
+      legacyYear: `${n.getFullYear()}年`,
+      isOpenA: this.state.isOpenA,
+      isOpenB: this.state.isOpenB,
+      agreedStr: `${dateSlash} 18:00`,
+      actualStr: `${dateSlash} ${p(punch.getHours())}:${p(punch.getMinutes())}`,
+      onPunchA: () => this.setState({ isOpenA: true, punchedAt: new Date() }),
+      onCloseA: () => this.setState({ isOpenA: false }),
+      onPunchB: () => this.setState({ isOpenB: true, punchedAt: new Date() }),
+      onCloseB: () => this.setState({ isOpenB: false }),
+    };
+  }
+}
+</script>
+</body>
+</html>
