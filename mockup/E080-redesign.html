@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1" name="viewport">
+<title>出勤資料 E080 · UI/UX 重新規劃原型</title>
+
+<!-- 直接引用專案本身的 AdminLTE 2 / Bootstrap 3.3.7 資產 -->
+<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
+<link rel="stylesheet" href="dist/css/AdminLTE.min.css">
+<link rel="stylesheet" href="dist/css/skins/_all-skins.min.css">
+<link rel="stylesheet" href="plugins/datepicker/datepicker3.css">
+<link rel="stylesheet" href="css/E01_Style.css">
+
+<style>
+  /* ===== 原型專用微調；正式導入時集中放 E080 的 style 區塊 ===== */
+  body { font-family: "Microsoft JhengHei", "Source Sans Pro", sans-serif; }
+
+  /* --- 版面：不用 bootstrap col，改用 grid 以精確控制斷點 --- */
+  .e080-layout {
+    display: grid; gap: 12px; padding: 10px 15px 0;
+    grid-template-columns: 300px minmax(0, 1fr);
+    align-items: start;
+  }
+  /* 側邊欄收起時（sidebar-collapse）空間變多，仍由下方斷點統一處理 */
+  @media (max-width: 991px) {
+    .e080-layout { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  /* 明細 + 統計並排；空間不足時統計自動落到明細下方 */
+  .detail-split {
+    display: grid; gap: 12px;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+  }
+  @media (max-width: 1559px) {
+    .detail-split { grid-template-columns: minmax(0, 1fr); }
+    .stat-rail .rail-tables { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  }
+  @media (max-width: 767px) {
+    .stat-rail .rail-tables { grid-template-columns: 1fr; }
+  }
+
+  /* --- 員工清單 --- */
+  .emp-list { max-height: 52vh; min-height: 240px; overflow-y: auto; }
+  .emp-list > a { padding: 7px 10px; }
+  .emp-list > a:nth-child(even):not(.active) { background: #f9f9f9; }
+  .emp-list > a.active,
+  .emp-list > a.active:hover { background: #f0f7fd; color: #333;
+    border-left: 5px solid #3c8dbc; padding-left: 5px; }
+  .emp-list .emp-name { font-weight: 600; }        /* 繼承 body 14px */
+  .emp-list .emp-sub { font-size: 14px; color: #999; }
+
+  /* --- 表格：字級一律 14px（Bootstrap body 基準），只收緊 padding --- */
+  .table > thead > tr > th { background: #f9fafb; color: #777;
+    white-space: nowrap; border-bottom: 2px solid #e3e6e8; padding: 7px 8px; }
+  .table > tbody > tr > td { vertical-align: middle; white-space: nowrap; padding: 5px 8px; }
+  .table-scroll { max-height: 56vh; min-height: 200px; overflow: auto; }
+  .table-scroll > .table > thead > tr > th { position: sticky; top: 0; z-index: 2; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .col-act { width: 64px; }
+  .col-item { width: 172px; }
+  .col-dhm { width: 48px; }
+  .col-time { width: 108px; }
+  .col-cb { width: 65px; }
+
+  /* 操作欄：欄寬縮小，圖示放大取代文字識別 */
+  .act-cell { padding: 4px 6px !important; white-space: nowrap; }
+  .act-btn { padding: 2px 5px; margin-right: 2px; }
+  .act-btn:last-child { margin-right: 0; }
+  .act-btn > i { font-size: 16px; }
+
+  /* --- 統計欄 --- */
+  .stat-rail .box { margin-bottom: 10px; }
+  .stat-rail .box-header { padding: 8px 10px; }
+  .stat-rail .table > tbody > tr > td,
+  .stat-rail .table > thead > tr > th { padding: 5px 8px; }
+
+  /* --- 其他 --- */
+  #contextBar .box-body { padding: 6px 10px; }
+  .month-box .form-control { display: inline-block; width: auto; }
+  .range-group { display: flex; align-items: center; }
+  .range-group .form-control { width: 118px; }
+  .range-group .sep { padding: 0 7px; color: #999; }
+  .proto-note { background: #fcf8e3; border: 1px solid #f0e2ab; color: #8a6d3b;
+    padding: 7px 34px 7px 12px; margin: 10px 15px 0; position: relative; }
+  .proto-note > .close { position: absolute; top: 6px; right: 10px; color: #8a6d3b; }
+  .nav-tabs-custom > .nav-tabs > li > a { font-size: 15px; padding: 9px 14px; }
+  /* 內容區用頁面灰底，白色只留給實際承載資料的 box，避免整片死白 */
+  .nav-tabs-custom > .tab-content { padding: 12px; background: #eef1f5; }
+  .nav-tabs-custom > .tab-content .box { background: #fff; }
+  .data-box { background: #fff; border: 1px solid #dfe3e8; border-radius: 3px; }
+  .data-box > .data-box-tools { padding: 8px 10px; border-bottom: 1px solid #eceff2; background: #f8f9fa; }
+  .data-box > .data-box-body { padding: 0; }
+  .data-box > .data-box-foot { padding: 7px 10px; border-top: 1px solid #eceff2;
+    background: #f8f9fa; color: #888; }
+
+  /* --- 加班換補休資訊（對應 CompensatoryLeaveInfoPanel 的 6 個欄位） --- */
+  .kv-list { margin: 0; }
+  .kv { display: flex; align-items: baseline; gap: 8px;
+    padding: 6px 10px; border-bottom: 1px solid #f0f2f4; }
+  .kv:last-child { border-bottom: 0; }
+  .kv > dt { flex: 1; font-weight: 400; color: #777; }
+  .kv > dd { margin: 0; font-weight: 600;
+    font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .kv-period { background: #f8f9fa; }
+  .kv-period > dd { font-weight: 600; }
+  .kv-total { background: #eaf4ec; border-top: 1px solid #cfe5d5; }
+  .kv-total > dt { color: #3f7a52; font-weight: 600; }
+  .kv-total > dd { color: #2f6b42; font-size: 18px; }
+
+  /* --- 主工作區 放大 / 還原 --- */
+  .zoom-btn { color: #888 !important; }
+  .zoom-btn:hover { color: #3c8dbc !important; background: #f6f8fa; }
+  .zoom-btn > span { margin-left: 3px; }
+  body.wa-zoom #contextBar,
+  body.wa-zoom #empPanel { display: none; }
+  body.wa-zoom .e080-layout { grid-template-columns: minmax(0, 1fr); padding-top: 12px; }
+  body.wa-zoom .table-scroll { max-height: 74vh; }
+  body.wa-zoom .emp-list { max-height: none; }
+  /* 彈窗改用 % 寬，避免 1920 以下被裁切 */
+  .modal-dialog.modal-wide { width: 92%; max-width: 1100px; }
+</style>
+</head>
+
+<body class="hold-transition skin-blue sidebar-mini">
+<div class="wrapper">
+<div class="fixed">
+
+  <!-- ===================== Header：沿用 E01.Master 結構 ===================== -->
+  <header class="main-header">
+
+    <span class="logo"><b>金豐雲端管理系統</b></span>
+
+    <nav class="navbar navbar-fixed-top">
+      <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
+        <span class="sr-only">Toggle navigation</span>
+      </a>
+      <ul class="nav navbar-nav">
+        <li><a href="#"><span>首頁</span></a></li>
+        <li class="bg-blue-active"><a href="#"><span>企業管理專區</span></a></li>
+        <li><a href="#"><span>企業員工專區</span></a></li>
+        <li><a href="#"><span>影音教學</span></a></li>
+        <li><a href="#"><span>金豐公告</span></a></li>
+      </ul>
+      <div class="navbar-custom-menu">
+        <ul class="nav navbar-nav">
+          <li class="dropdown tasks-menu">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-flag-o"></i></a>
+            <ul class="dropdown-menu"><li class="header">無新訊息</li></ul>
+          </li>
+          <li><u><strong class="navbar-text pull-right">金豐範例公司</strong></u></li>
+          <li><u><strong class="navbar-text pull-right">王管理員</strong></u></li>
+          <li><a href="#"><span>密碼更改</span></a></li>
+          <li><a href="#"><span>登出</span></a></li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ===================== 左方子功能表：沿用 E01.Master 結構 ===================== -->
+  <aside class="main-sidebar" style="max-height: 900px; overflow-y: auto;">
+    <section class="sidebar">
+      <ul class="sidebar-menu">
+
+        <li class="treeview">
+          <a href="#"><i class="fa fa-dashboard"></i><span>公司資料設定</span>
+            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+          <ul class="treeview-menu">
+            <li class="treeview"><a href="#"><i class="fa fa-dashboard"></i><span>公司基本資料</span>
+              <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+              <ul class="treeview-menu">
+                <li><a href="#"><i class="fa fa-circle-o"></i>公司基本資料設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>部門設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>職稱設定</a></li>
+              </ul>
+            </li>
+            <li class="treeview"><a href="#"><i class="fa fa-dashboard"></i><span>公司薪資資料</span>
+              <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+              <ul class="treeview-menu">
+                <li><a href="#"><i class="fa fa-circle-o"></i>薪資科目總表設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>公司薪資科目設定</a></li>
+              </ul>
+            </li>
+            <li class="treeview"><a href="#"><i class="fa fa-dashboard"></i><span>公司出勤資料</span>
+              <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+              <ul class="treeview-menu">
+                <li><a href="#"><i class="fa fa-circle-o"></i>出勤項目設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>加班項目參數設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>工作時間設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>全年度行事曆設定</a></li>
+              </ul>
+            </li>
+            <li class="treeview"><a href="#"><i class="fa fa-dashboard"></i><span>公司考核設定</span>
+              <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+              <ul class="treeview-menu"><li><a href="#"><i class="fa fa-circle-o"></i>考核參數設定</a></li></ul>
+            </li>
+            <li class="treeview"><a href="#"><i class="fa fa-dashboard"></i><span>公司其他設定</span>
+              <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+              <ul class="treeview-menu"><li><a href="#"><i class="fa fa-circle-o"></i>公司資料維護</a></li></ul>
+            </li>
+          </ul>
+        </li>
+
+        <li class="treeview active menu-open">
+          <a href="#"><i class="fa fa-dashboard"></i><span>員工資料設定</span>
+            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+          <ul class="treeview-menu" style="display:block">
+            <li><a href="#"><i class="fa fa-book"></i><span>人事資料</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>員工班表</span></a></li>
+            <li class="active"><a href="#"><i class="fa fa-book"></i><span>出勤資料</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>加班補休明細</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>特休遞延明細</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>考核資料</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>薪資發放</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>排班 1.5</span></a></li>
+          </ul>
+        </li>
+
+        <li class="treeview">
+          <a href="#"><i class="fa fa-dashboard"></i><span>報表列印</span>
+            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+          <ul class="treeview-menu">
+            <li><a href="#"><i class="fa fa-book"></i><span>人事報表</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>薪資報表</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>考核報表</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>出勤報表</span></a></li>
+          </ul>
+        </li>
+
+        <li class="treeview">
+          <a href="#"><i class="fa fa-dashboard"></i><span>客戶服務</span>
+            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+          <ul class="treeview-menu">
+            <li><a href="#"><i class="fa fa-book"></i><span>顧問文件上傳/下載</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>顧問問題諮詢</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>金豐訊息通知</span></a></li>
+          </ul>
+        </li>
+
+        <li class="treeview">
+          <a href="#"><i class="fa fa-dashboard"></i><span>企業員工專區管理</span>
+            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+          <ul class="treeview-menu">
+            <li class="treeview"><a href="#"><i class="fa fa-dashboard"></i><span>員工權限管理</span>
+              <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+              <ul class="treeview-menu">
+                <li><a href="#"><i class="fa fa-circle-o"></i>角色管理</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>權限管理</a></li>
+              </ul>
+            </li>
+            <li class="treeview"><a href="#"><i class="fa fa-dashboard"></i><span>雲端打卡</span>
+              <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+              <ul class="treeview-menu">
+                <li><a href="#"><i class="fa fa-circle-o"></i>APP打卡設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>打卡紀錄查詢</a></li>
+              </ul>
+            </li>
+            <li><a href="#"><i class="fa fa-book"></i><span>申請紀錄新增</span></a></li>
+          </ul>
+        </li>
+
+      </ul>
+    </section>
+  </aside>
+
+  <div class="content-wrapper">
+    <div class="proto-note" id="protoNote">
+      <i class="fa fa-info-circle"></i> 靜態 UI/UX 原型 — 框架與樣式沿用專案本身的 E01.Master / AdminLTE 2 skin-blue；資料為假資料，僅前端互動。
+      <button type="button" class="close" aria-label="Close" onclick="$('#protoNote').fadeOut(50)">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+
+    <!-- ===================== 頁面級 Context Bar ===================== -->
+    <div id="contextBar" style="padding:10px 15px 0">
+      <div class="box box-primary" style="margin-bottom:0">
+        <div class="box-body">
+          <form class="form-inline month-box" style="display:inline-block">
+            <label style="margin-right:6px"><i class="fa fa-calendar"></i> 出勤月份</label>
+            <select class="form-control">
+              <option>2026</option><option>2025</option><option>2024</option>
+            </select>
+            <span style="padding:0 4px">/</span>
+            <select class="form-control">
+              <option>08</option><option>07</option><option>06</option>
+            </select>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== 主版面 ===================== -->
+    <div class="e080-layout">
+
+      <!-- ---------- 員工清單 ---------- -->
+      <div class="box box-solid" id="empPanel" style="margin-bottom:12px">
+        <div class="box-header with-border">
+          <h3 class="box-title"><i class="fa fa-users"></i> 員工</h3>
+          <div class="box-tools pull-right"><span class="label label-default" id="empCount">6</span></div>
+        </div>
+        <div class="box-body" style="padding-bottom:0">
+          <div class="form-group" style="margin-bottom:6px">
+            <select class="form-control" id="empDept">
+              <option>全部部門</option><option>工程部</option><option>管理部</option><option>業務部</option><option>生產部</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <input type="text" class="form-control" id="empKw" placeholder="姓名 / 員工編號…">
+          </div>
+          <div class="form-group">
+            <button type="button" class="btn btn-primary btn-block" onclick="renderEmp($('#empKw').val())">
+              <i class="fa fa-search"></i> 查詢</button>
+          </div>
+        </div>
+        <div class="list-group emp-list" id="empList" style="margin-bottom:0"></div>
+      </div>
+
+      <!-- ---------- 主工作區 ---------- -->
+      <div class="nav-tabs-custom" style="margin-bottom:12px">
+        <ul class="nav nav-tabs">
+          <li class="active"><a href="#tabDetail" data-toggle="tab">
+            <i class="fa fa-list"></i> 出勤明細與統計 <span class="label label-default">12</span></a></li>
+          <li><a href="#tabImport" data-toggle="tab"><i class="fa fa-exchange"></i> 匯入 / 匯出</a></li>
+          <li><a href="#tabCheck" data-toggle="tab">
+            <i class="fa fa-stethoscope"></i> 打卡紀錄檢查 <span class="label label-danger">3</span></a></li>
+
+          <li class="pull-right">
+            <a href="javascript:;" id="btnZoom" class="zoom-btn" onclick="toggleZoom()">
+              <i class="fa fa-expand"></i> <span id="zoomText">放大</span>
+            </a>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+
+          <!-- ========== 出勤明細（左）＋ 當月統計（右） ========== -->
+          <div class="tab-pane active" id="tabDetail">
+            <div class="detail-split">
+
+              <!-- 明細 -->
+              <div>
+                <div class="data-box">
+                <div class="data-box-tools btn-toolbar" style="margin:0">
+                  <div class="btn-group">
+                    <button class="btn btn-primary" data-toggle="modal" data-target="#mAdd">
+                      <i class="fa fa-plus"></i> 新增明細</button>
+                  </div>
+                  <div class="btn-group">
+                    <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                      <i class="fa fa-download"></i> 匯入線上申請 <span class="caret"></span></button>
+                    <ul class="dropdown-menu">
+                      <li><a href="#" data-toggle="modal" data-target="#mImportApply">
+                        <i class="fa fa-user fa-fw"></i> 此位員工 <b class="scope-name">陳美玲</b></a></li>
+                      <li><a href="#" data-toggle="modal" data-target="#mImportApplyAll">
+                        <i class="fa fa-users fa-fw"></i> 所有員工</a></li>
+                    </ul>
+                  </div>
+                  <div class="btn-group">
+                    <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                      <i class="fa fa-download"></i> 匯入線上打卡 <span class="caret"></span></button>
+                    <ul class="dropdown-menu">
+                      <li><a href="#" data-toggle="modal" data-target="#mImportBoard">
+                        <i class="fa fa-user fa-fw"></i> 此位員工 <b class="scope-name">陳美玲</b></a></li>
+                      <li><a href="#" data-toggle="modal" data-target="#mImportBoardAll">
+                        <i class="fa fa-users fa-fw"></i> 所有員工</a></li>
+                    </ul>
+                  </div>
+                  <div class="btn-group pull-right">
+                    <button class="btn btn-danger dropdown-toggle" data-toggle="dropdown">
+                      <i class="fa fa-trash"></i> 清除紀錄 <span class="caret"></span></button>
+                    <ul class="dropdown-menu dropdown-menu-right" style="min-width:280px">
+                      <li><a href="#" data-toggle="modal" data-target="#mWipeOne">清除 <b id="wipeName">陳美玲</b> 本月出勤紀錄</a></li>
+                      <li><a href="#" data-toggle="modal" data-target="#mWipeAll" class="text-red">清除 <b>所有員工</b> 本月出勤紀錄</a></li>
+                      <li class="divider"></li>
+                      <li><p class="text-muted" style="padding:0 15px;margin:0">
+                        自動轉入的加班單與補休單不會被刪除，需回原申請單處理或編輯改為 0。</p></li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="table-scroll">
+                  <table class="table table-striped table-bordered table-hover" style="margin:0">
+                    <thead>
+                      <tr>
+                        <th class="col-act">操作</th>
+                        <th class="col-item">出勤項目</th>
+                        <th class="col-dhm">日</th><th class="col-dhm">時</th><th class="col-dhm">分</th>
+                        <th class="col-time">開始時間</th><th class="col-time">結束時間</th>
+                        <th class="col-cb">換補休</th><th class="col-cb">特休遞延</th>
+                      </tr>
+                    </thead>
+                    <tbody id="detailBody"></tbody>
+                  </table>
+                </div>
+                <div class="data-box-foot">
+                  共 <span id="detailCount">9</span> 筆 · 點「<i class="fa fa-pencil"></i>」以彈窗編輯 ·
+                  <i class="fa fa-lock"></i> 表示加班單／補休單自動轉入，不可刪除。
+                </div>
+                </div><!-- /data-box -->
+              </div>
+
+              <!-- 統計欄 -->
+              <div class="stat-rail">
+                <div class="rail-tables">
+                  <div class="box box-solid">
+                    <div class="box-header with-border"><h3 class="box-title">當月出勤統計</h3></div>
+                    <div class="box-body no-padding">
+                      <table class="table table-striped">
+                        <thead><tr><th>出勤項目</th><th style="width:38px">日</th><th style="width:38px">時</th><th style="width:38px">分</th></tr></thead>
+                        <tbody>
+                          <tr><td>正常出勤</td><td class="num">18</td><td class="num">0</td><td class="num">0</td></tr>
+                          <tr><td>平日延長工時加班</td><td class="num">0</td><td class="num">14</td><td class="num">30</td></tr>
+                          <tr><td>休息日加班</td><td class="num">0</td><td class="num">8</td><td class="num">0</td></tr>
+                          <tr><td>加班補休</td><td class="num">0</td><td class="num">4</td><td class="num">0</td></tr>
+                          <tr><td>特別休假</td><td class="num">1</td><td class="num">0</td><td class="num">0</td></tr>
+                          <tr><td>病假</td><td class="num">0</td><td class="num">4</td><td class="num">0</td></tr>
+                          <tr><td>事假</td><td class="num">0</td><td class="num">4</td><td class="num">0</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div class="box box-solid">
+                    <div class="box-header with-border">
+                      <h3 class="box-title">加班換補休資訊</h3>
+                    </div>
+                    <div class="box-body no-padding">
+                      <dl class="kv-list">
+                        <div class="kv kv-period">
+                          <dt>加班換補休起訖日期</dt>
+                          <dd>2026/02/02 ~ 2027/02/01</dd>
+                        </div>
+                        <div class="kv">
+                          <dt>累計加班換補休時數</dt>
+                          <dd class="num">26.5</dd>
+                        </div>
+                        <div class="kv">
+                          <dt>累計已補休時數</dt>
+                          <dd class="num">4</dd>
+                        </div>
+                        <div class="kv">
+                          <dt>累積已補休同意尚未發生時數</dt>
+                          <dd class="num">4</dd>
+                        </div>
+                        <div class="kv">
+                          <dt>累計申請中補休時數</dt>
+                          <dd class="num">2</dd>
+                        </div>
+                        <div class="kv kv-total">
+                          <dt>剩餘可申請補休時數</dt>
+                          <dd class="num">16.5</dd>
+                        </div>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ========== 匯入 / 匯出 ========== -->
+          <div class="tab-pane" id="tabImport">
+            <div class="callout callout-warning" style="margin-top:0">
+              <h4>匯入區間必須與出勤月份一致</h4>
+              <p style="margin:0">目前出勤月份為 <b>2026/08</b>，下方區間預設已同步。若手動改成跨月份，送出前會再次確認（沿用 checkDateConfirm）。</p>
+            </div>
+
+            <div class="box box-solid">
+              <div class="box-header with-border"><h3 class="box-title">線上紀錄匯入</h3></div>
+              <div class="box-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>申請匯入起訖日期</label>
+                      <div class="range-group">
+                        <input class="form-control datepicker" value="2026/08/01">
+                        <span class="sep">~</span>
+                        <input class="form-control datepicker" value="2026/08/31">
+                      </div>
+                    </div>
+                    <button class="btn btn-primary" data-toggle="modal" data-target="#mImportApply">
+                      <i class="fa fa-user fa-fw"></i> 匯入此員工</button>
+                    <button class="btn btn-default" data-toggle="modal" data-target="#mImportApply">
+                      <i class="fa fa-users fa-fw"></i> 匯入所有員工</button>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>打卡匯入起訖日期</label>
+                      <div class="range-group">
+                        <input class="form-control datepicker" value="2026/08/01">
+                        <span class="sep">~</span>
+                        <input class="form-control datepicker" value="2026/08/31">
+                      </div>
+                    </div>
+                    <button class="btn btn-primary" data-toggle="modal" data-target="#mImportBoard">
+                      <i class="fa fa-user fa-fw"></i> 匯入此員工</button>
+                    <button class="btn btn-default" data-toggle="modal" data-target="#mImportBoard">
+                      <i class="fa fa-users fa-fw"></i> 匯入所有員工</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="box box-solid">
+                  <div class="box-header with-border"><h3 class="box-title">Excel 匯入</h3></div>
+                  <div class="box-body">
+                    <button class="btn btn-primary" data-toggle="modal" data-target="#mExcel">
+                      <i class="fa fa-file-excel-o"></i> 匯入本月出勤資料</button>
+                    <button class="btn btn-default" data-toggle="modal" data-target="#mExcel">
+                      <i class="fa fa-file-excel-o"></i> 長照出勤 Excel 匯入</button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="box box-solid">
+                  <div class="box-header with-border"><h3 class="box-title">下載</h3></div>
+                  <div class="box-body">
+                    <button class="btn btn-default"><i class="fa fa-download"></i> 員工出勤資料匯入表（範本）</button>
+                    <button class="btn btn-default"><i class="fa fa-download"></i> 出勤明細橫式匯入表（範本）</button>
+                    <button class="btn btn-default"><i class="fa fa-table"></i> 出勤明細橫式資料表</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========== 紀錄檢查 ========== -->
+          <div class="tab-pane" id="tabCheck">
+            <div class="box box-solid">
+              <div class="box-header with-border"><h3 class="box-title">打卡紀錄檢查</h3></div>
+              <div class="box-body">
+                <div class="form-group">
+                  <label>檢查起訖日期</label>
+                  <div class="range-group">
+                    <input class="form-control datepicker" value="2026/08/01">
+                    <span class="sep">~</span>
+                    <input class="form-control datepicker" value="2026/08/31">
+                  </div>
+                </div>
+                <button class="btn btn-primary" data-toggle="modal" data-target="#mCheck">
+                  <i class="fa fa-user fa-fw"></i> 檢查此員工</button>
+                <button class="btn btn-default" data-toggle="modal" data-target="#mCheck">
+                  <i class="fa fa-users fa-fw"></i> 檢查所有員工</button>
+              </div>
+            </div>
+
+            <div class="callout callout-danger">
+              <h4>最近一次檢查發現 3 筆異常</h4>
+              <p style="margin:0">2026/08/05 15:42 執行 · 範圍 2026/08/01 ~ 2026/08/31</p>
+            </div>
+
+            <div class="box box-solid">
+              <div class="box-body table-responsive no-padding">
+                <table class="table table-striped table-hover">
+                  <thead><tr><th style="width:90px">員工姓名</th><th style="width:140px">部門名稱</th>
+                    <th style="width:120px">行動電話</th><th style="width:150px">班別</th><th>訊息</th></tr></thead>
+                  <tbody>
+                    <tr><td>陳美玲</td><td>工程部</td><td>0912-345-678</td><td>日班 08:30-17:30</td>
+                        <td>2026/08/11 缺下班打卡紀錄</td></tr>
+                    <tr><td>林建宏</td><td>工程部</td><td>0933-221-100</td><td>夜班 20:00-05:00</td>
+                        <td>2026/08/13 班表異常：跨日班別未設定休息時段</td></tr>
+                    <tr><td>王雅婷</td><td>管理部</td><td>0955-888-201</td><td>日班 09:00-18:00</td>
+                        <td>2026/08/20 打卡時間早於班表 90 分鐘，未有加班申請</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="box-footer">
+                <button class="btn btn-default"><i class="fa fa-file-excel-o"></i> 匯出 Excel</button>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /tab-content -->
+      </div><!-- /nav-tabs-custom -->
+
+    </div><!-- /e080-layout -->
+  </div><!-- /content-wrapper -->
+
+  <footer class="main-footer">
+    <div class="pull-right hidden-xs">E080 UI/UX 原型</div>
+    <strong>金豐雲端管理系統</strong>
+  </footer>
+
+</div><!-- /.fixed -->
+</div><!-- /.wrapper -->
+
+<!-- ===================== Modals ===================== -->
+<div class="modal fade" id="mAdd"><div class="modal-dialog">
+  <div class="modal-content">
+    <div class="modal-header">
+      <button class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title">新增出勤明細</h4>
+    </div>
+    <div class="modal-body">
+      <div class="callout callout-info" style="margin-top:0">
+        <p style="margin:0">對象 <b>陳美玲 · A0231</b>　月份 <b>2026/08</b></p>
+      </div>
+      <div class="row">
+        <div class="col-md-7"><div class="form-group"><label>出勤項目</label>
+          <select class="form-control">
+            <option>正常出勤</option><option>平日延長工時加班</option><option>休息日加班</option>
+            <option>加班補休</option><option>特別休假</option><option>病假</option><option>事假</option>
+          </select></div></div>
+        <div class="col-md-5"><div class="form-group"><label>工資日薪</label>
+          <input class="form-control" value="1,800"></div></div>
+      </div>
+      <div class="form-group"><label>時數</label>
+        <div class="row">
+          <div class="col-xs-4"><div class="input-group">
+            <input class="form-control" placeholder="0"><span class="input-group-addon">天</span></div></div>
+          <div class="col-xs-4"><div class="input-group">
+            <input class="form-control" placeholder="0"><span class="input-group-addon">時</span></div></div>
+          <div class="col-xs-4"><div class="input-group">
+            <input class="form-control" placeholder="0"><span class="input-group-addon">分</span></div></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6"><div class="form-group"><label>開始時間</label>
+          <input class="form-control datepicker" value="2026/08/05"></div></div>
+        <div class="col-md-6"><div class="form-group"><label>結束時間</label>
+          <input class="form-control datepicker" value="2026/08/05"></div></div>
+      </div>
+      <hr style="margin:10px 0">
+      <div class="checkbox"><label><input type="checkbox"> 加班換補休</label></div>
+      <div class="checkbox"><label>
+        <input type="checkbox" onchange="$('#postponeRow').toggle(this.checked)"> 特休遞延</label>
+        <p class="help-block" style="margin:0 0 0 20px">勾選後開始／結束時間改為唯讀，需填遞延起訖日期。</p>
+      </div>
+      <div class="row" id="postponeRow" style="display:none">
+        <div class="col-md-6"><div class="form-group has-warning"><label>遞延開始日期 <span class="text-red">*</span></label>
+          <input class="form-control datepicker" placeholder="yyyy/mm/dd"></div></div>
+        <div class="col-md-6"><div class="form-group has-warning"><label>遞延截止日期 <span class="text-red">*</span></label>
+          <input class="form-control datepicker" placeholder="yyyy/mm/dd"></div></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-dismiss="modal">取消</button>
+      <button class="btn btn-primary">新增</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- 編輯明細（取代原本的 GridView 行內編輯） -->
+<div class="modal fade" id="mEdit"><div class="modal-dialog">
+  <div class="modal-content">
+    <div class="modal-header">
+      <button class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title">編輯出勤明細</h4>
+    </div>
+    <div class="modal-body">
+      <div class="callout callout-info" style="margin-top:0">
+        <p style="margin:0">對象 <b class="scope-name">陳美玲</b>　月份 <b>2026/08</b>
+          <span id="edSrcNote"></span></p>
+      </div>
+      <div class="form-group"><label>出勤項目</label>
+        <select class="form-control" id="edItem">
+          <option>正常出勤</option><option>平日延長工時加班</option><option>休息日加班</option>
+          <option>加班補休</option><option>特別休假</option><option>病假</option><option>事假</option>
+        </select></div>
+      <div class="form-group"><label>時數</label>
+        <div class="row">
+          <div class="col-xs-4"><div class="input-group">
+            <input class="form-control num" id="edD"><span class="input-group-addon">天</span></div></div>
+          <div class="col-xs-4"><div class="input-group">
+            <input class="form-control num" id="edH"><span class="input-group-addon">時</span></div></div>
+          <div class="col-xs-4"><div class="input-group">
+            <input class="form-control num" id="edM"><span class="input-group-addon">分</span></div></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6"><div class="form-group"><label>開始時間</label>
+          <input class="form-control datepicker" id="edS"></div></div>
+        <div class="col-md-6"><div class="form-group"><label>結束時間</label>
+          <input class="form-control datepicker" id="edE"></div></div>
+      </div>
+      <hr style="margin:10px 0">
+      <div class="checkbox"><label><input type="checkbox" id="edOT"> 加班換補休</label></div>
+      <div class="checkbox"><label>
+        <input type="checkbox" id="edPP" onchange="$('#edPPRow').toggle(this.checked)"> 特休遞延</label>
+        <p class="help-block" style="margin:0 0 0 20px">勾選後開始／結束時間改為唯讀，需填遞延起訖日期。</p>
+      </div>
+      <div class="row" id="edPPRow" style="display:none">
+        <div class="col-md-6"><div class="form-group has-warning"><label>遞延開始日期 <span class="text-red">*</span></label>
+          <input class="form-control datepicker" placeholder="yyyy/mm/dd"></div></div>
+        <div class="col-md-6"><div class="form-group has-warning"><label>遞延截止日期 <span class="text-red">*</span></label>
+          <input class="form-control datepicker" placeholder="yyyy/mm/dd"></div></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-dismiss="modal">取消</button>
+      <button class="btn btn-primary">儲存</button>
+    </div>
+  </div>
+</div></div>
+
+<div class="modal fade" id="mImportApplyAll"><div class="modal-dialog">
+  <div class="modal-content">
+    <div class="modal-header"><button class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title">匯入所有員工線上申請紀錄</h4></div>
+    <div class="modal-body">
+      <div class="form-group"><label>申請匯入起訖日期</label>
+        <div class="range-group">
+          <input class="form-control datepicker" value="2026/08/01">
+          <span class="sep">~</span>
+          <input class="form-control datepicker" value="2026/08/31">
+        </div></div>
+      <div class="callout callout-warning" style="margin-bottom:0">
+        <p style="margin:0"><b>將處理 6 位員工</b>　會先刪除此區間既有申請紀錄再重新匯入，執行期間請勿關閉頁面。</p></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-dismiss="modal">取消</button>
+      <button class="btn btn-primary">確認匯入</button>
+    </div>
+  </div>
+</div></div>
+
+<div class="modal fade" id="mImportBoardAll"><div class="modal-dialog">
+  <div class="modal-content">
+    <div class="modal-header"><button class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title">匯入所有員工線上打卡紀錄</h4></div>
+    <div class="modal-body">
+      <div class="form-group"><label>打卡匯入起訖日期</label>
+        <div class="range-group">
+          <input class="form-control datepicker" value="2026/08/01">
+          <span class="sep">~</span>
+          <input class="form-control datepicker" value="2026/08/31">
+        </div></div>
+      <div class="callout callout-warning" style="margin-bottom:0">
+        <p style="margin:0"><b>將處理 6 位員工</b>　執行期間請勿關閉頁面。</p></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-dismiss="modal">取消</button>
+      <button class="btn btn-primary">確認匯入</button>
+    </div>
+  </div>
+</div></div>
+
+<div class="modal fade" id="mExcel"><div class="modal-dialog">
+  <div class="modal-content">
+    <div class="modal-header"><button class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title">匯入本月出勤資料</h4></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Excel 檔案</label>
+        <input type="file" class="form-control">
+        <p class="help-block">支援 .xls / .xlsx</p></div>
+      <div class="checkbox"><label><input type="checkbox" checked> 匯入時清除所有資料</label>
+        <p class="help-block" style="margin:0 0 0 20px">會先刪除本月所有出勤明細後再匯入。</p></div>
+      <div class="checkbox"><label><input type="checkbox"> 匯入時進行員工加班申請與補休申請紀錄匯入</label></div>
+      <div class="callout callout-danger" style="margin-bottom:0">
+        <p style="margin:0"><b>此操作不可復原</b>　勾選「清除所有資料」時，本月既有明細將全部刪除。</p></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-dismiss="modal">取消</button>
+      <button class="btn btn-primary">開始匯入</button>
+    </div>
+  </div>
+</div></div>
+
+<div class="modal fade" id="mImportApply"><div class="modal-dialog">
+  <div class="modal-content">
+    <div class="modal-header"><button class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title">匯入線上申請紀錄</h4></div>
+    <div class="modal-body">
+      <div class="form-group"><label>申請匯入起訖日期</label>
+        <div class="range-group">
+          <input class="form-control datepicker" value="2026/08/01">
+          <span class="sep">~</span>
+          <input class="form-control datepicker" value="2026/08/31">
+        </div></div>
+      <div class="callout callout-success" style="margin-bottom:0">
+        <p style="margin:0"><b>區間與出勤月份 2026/08 相符</b>　將先刪除此區間既有申請紀錄，再重新匯入。</p></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-dismiss="modal">取消</button>
+      <button class="btn btn-primary">確認匯入</button>
+    </div>
+  </div>
+</div></div>
+
+<div class="modal fade" id="mImportBoard"><div class="modal-dialog">
+  <div class="modal-content">
+    <div class="modal-header"><button class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title">匯入線上打卡紀錄</h4></div>
+    <div class="modal-body">
+      <div class="form-group"><label>打卡匯入起訖日期</label>
+        <div class="range-group">
+          <input class="form-control datepicker" value="2026/07/01">
+          <span class="sep">~</span>
+          <input class="form-control datepicker" value="2026/08/31">
+        </div></div>
+      <div class="callout callout-warning" style="margin-bottom:0">
+        <p style="margin:0"><b>區間跨越出勤月份</b>　目前出勤月份為 2026/08，但區間包含 2026/07。跨月匯入可能造成資料重複，確定要繼續嗎？</p></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-dismiss="modal">取消</button>
+      <button class="btn btn-danger">仍要匯入</button>
+    </div>
+  </div>
+</div></div>
+
+<div class="modal fade" id="mWipeOne"><div class="modal-dialog modal-sm">
+  <div class="modal-content">
+    <div class="modal-header"><button class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title">確認清除</h4></div>
+    <div class="modal-body">
+      <div class="callout callout-danger" style="margin:0">
+        <h4>清除 陳美玲 2026/08 出勤紀錄</h4>
+        <p style="margin:0">此操作不可復原。自動轉入的加班單與補休單不會被刪除。</p></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-dismiss="modal">取消</button>
+      <button class="btn btn-danger">確認清除</button>
+    </div>
+  </div>
+</div></div>
+
+<div class="modal fade" id="mWipeAll"><div class="modal-dialog">
+  <div class="modal-content">
+    <div class="modal-header"><button class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title">確認清除</h4></div>
+    <div class="modal-body">
+      <div class="callout callout-danger">
+        <h4>清除「所有員工」2026/08 出勤紀錄</h4>
+        <p style="margin:0">影響 6 位員工、共 74 筆明細，此操作不可復原。</p></div>
+      <div class="form-group"><label>請輸入出勤月份 <code>2026/08</code> 以確認</label>
+        <input class="form-control" placeholder="yyyy/mm"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-dismiss="modal">取消</button>
+      <button class="btn btn-danger" disabled>確認清除</button>
+    </div>
+  </div>
+</div></div>
+
+<div class="modal fade" id="mCheck"><div class="modal-dialog modal-wide">
+  <div class="modal-content">
+    <div class="modal-header"><button class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title">打卡紀錄檢查</h4></div>
+    <div class="modal-body">
+      <div class="callout callout-danger">
+        <h4>發現 3 筆異常</h4>
+        <p style="margin:0">範圍 2026/08/01 ~ 2026/08/31</p></div>
+      <div class="table-scroll">
+        <table class="table table-striped table-bordered table-hover" style="margin:0">
+          <thead><tr><th style="width:90px">員工姓名</th><th style="width:180px">部門名稱</th>
+            <th style="width:120px">行動電話</th><th style="width:150px">班別</th><th>訊息</th></tr></thead>
+          <tbody>
+            <tr><td>陳美玲</td><td>工程部</td><td>0912-345-678</td><td>日班 08:30-17:30</td>
+                <td>2026/08/11 缺下班打卡紀錄</td></tr>
+            <tr><td>林建宏</td><td>工程部</td><td>0933-221-100</td><td>夜班 20:00-05:00</td>
+                <td>2026/08/13 班表異常：跨日班別未設定休息時段</td></tr>
+            <tr><td>王雅婷</td><td>管理部</td><td>0955-888-201</td><td>日班 09:00-18:00</td>
+                <td>2026/08/20 打卡時間早於班表 90 分鐘，未有加班申請</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-dismiss="modal">關閉視窗</button>
+      <button class="btn btn-primary"><i class="fa fa-file-excel-o"></i> 匯出 Excel</button>
+    </div>
+  </div>
+</div></div>
+
+<script src="plugins/jQuery/jquery-2.2.3.min.js"></script>
+<script src="bootstrap/js/bootstrap.min.js"></script>
+<script src="plugins/datepicker/bootstrap-datepicker.js"></script>
+<script src="dist/js/app.min.js"></script>
+<script>
+var EMP = [
+  { n:'陳美玲', c:'A0231', d:'工程部', p:'月薪制', st:'在職' },
+  { n:'林建宏', c:'A0244', d:'工程部', p:'月薪制', st:'在職' },
+  { n:'王雅婷', c:'B0102', d:'管理部', p:'月薪制', st:'在職' },
+  { n:'張志豪', c:'C0518', d:'業務部', p:'日薪制', st:'在職' },
+  { n:'黃思穎', c:'B0119', d:'管理部', p:'時薪制', st:'在職' },
+  { n:'吳文彬', c:'C0522', d:'業務部', p:'日薪制', st:'在職' },
+  { n:'李承翰', c:'A0255', d:'工程部', p:'月薪制', st:'在職' },
+  { n:'蔡佳蓉', c:'D0301', d:'生產部', p:'日薪制', st:'在職' },
+  { n:'許志偉', c:'D0308', d:'生產部', p:'日薪制', st:'在職' },
+  { n:'鄭淑芬', c:'B0125', d:'管理部', p:'月薪制', st:'在職' },
+  { n:'謝博文', c:'A0262', d:'工程部', p:'月薪制', st:'在職' },
+  { n:'簡怡君', c:'C0530', d:'業務部', p:'月薪制', st:'在職' },
+  { n:'邱建成', c:'D0312', d:'生產部', p:'日薪制', st:'在職' },
+  { n:'楊淑惠', c:'B0130', d:'管理部', p:'月薪制', st:'在職' },
+  { n:'周宗翰', c:'A0270', d:'工程部', p:'月薪制', st:'在職' },
+  { n:'游雅筑', c:'C0540', d:'業務部', p:'日薪制', st:'在職' },
+  { n:'曾國豪', c:'D0318', d:'生產部', p:'時薪制', st:'在職' },
+  { n:'高芷萱', c:'B0136', d:'管理部', p:'月薪制', st:'在職' },
+  { n:'蕭家豪', c:'A0278', d:'工程部', p:'月薪制', st:'在職' },
+  { n:'洪筱涵', c:'C0548', d:'業務部', p:'月薪制', st:'在職' },
+  { n:'賴俊傑', c:'D0325', d:'生產部', p:'日薪制', st:'在職' },
+  { n:'范瑞祥', c:'A0285', d:'工程部', p:'月薪制', st:'在職' },
+  { n:'柯欣妮', c:'B0142', d:'管理部', p:'月薪制', st:'在職' },
+  { n:'趙彥廷', c:'C0555', d:'業務部', p:'日薪制', st:'在職' },
+  { n:'田美玉', c:'D0331', d:'生產部', p:'時薪制', st:'在職' },
+  { n:'潘志明', c:'A0290', d:'工程部', p:'月薪制', st:'離職' },
+  { n:'徐雅琪', c:'B0150', d:'管理部', p:'月薪制', st:'離職' },
+  { n:'方建宏', c:'C0560', d:'業務部', p:'日薪制', st:'離職' }
+];
+var sel = 0;
+
+function renderEmp(kw) {
+  kw = (kw || '').trim().toLowerCase();
+  var dept = $('#empDept').val();
+  var html = '', shown = 0;
+  $.each(EMP, function (i, e) {
+    if (kw && e.n.indexOf(kw) < 0 && e.c.toLowerCase().indexOf(kw) < 0) return;
+    if (dept && dept !== '全部部門' && e.d !== dept) return;
+    shown++;
+    html += '<a href="javascript:;" class="list-group-item' + (i === sel ? ' active' : '') + '" onclick="pick(' + i + ')">'
+          + '<div class="emp-name">' + e.n + '</div>'
+          + '<div class="emp-sub">' + e.c + ' · ' + e.d + ' · ' + e.p + '</div></a>';
+  });
+  $('#empList').html(html);
+  $('#empCount').text(shown);
+  $('#empList [data-toggle="tooltip"]').tooltip();
+}
+
+function pick(i) {
+  sel = i;
+  renderEmp($('#empKw').val());
+  var e = EMP[i];
+  $('#wipeName').text(e.n);
+  $('.scope-name').text(e.n);
+}
+
+/* ---------- 出勤明細（src: '' 可刪除 / '加班單' '補休單' 為自動轉入不可刪除） ---------- */
+var DETAIL = [
+  { item:'正常出勤',         d:1, h:0,  m:0,  s:'2026/08/03', e:'2026/08/03', ot:0, pp:0, src:'' },
+  { item:'平日延長工時加班', d:0, h:2,  m:0,  s:'2026/08/05', e:'2026/08/05', ot:1, pp:0, src:'加班單' },
+  { item:'特別休假',         d:1, h:0,  m:0,  s:'2026/08/07', e:'2026/08/07', ot:0, pp:1, src:'' },
+  { item:'休息日加班',       d:0, h:8,  m:0,  s:'2026/08/09', e:'2026/08/09', ot:1, pp:0, src:'加班單' },
+  { item:'加班補休',         d:0, h:4,  m:0,  s:'2026/08/12', e:'2026/08/12', ot:0, pp:0, src:'補休單' },
+  { item:'病假',             d:0, h:4,  m:0,  s:'2026/08/14', e:'2026/08/14', ot:0, pp:0, src:'' },
+  { item:'正常出勤',         d:1, h:0,  m:0,  s:'2026/08/17', e:'2026/08/17', ot:0, pp:0, src:'' },
+  { item:'平日延長工時加班', d:0, h:2,  m:30, s:'2026/08/19', e:'2026/08/19', ot:0, pp:0, src:'' },
+  { item:'事假',             d:0, h:4,  m:0,  s:'2026/08/21', e:'2026/08/21', ot:0, pp:0, src:'' }
+];
+
+function mark(v) { return v ? '<i class="fa fa-check text-green"></i>' : '<span class="text-muted">—</span>'; }
+
+function renderDetail() {
+  var html = '';
+  $.each(DETAIL, function (i, r) {
+    // disabled 的按鈕不會觸發 tooltip，故包一層 span 承載
+    var del = r.src
+      ? '<span data-toggle="tooltip" data-container="body" title="' + r.src + '自動轉入，不可刪除">'
+        + '<button class="btn btn-xs btn-default act-btn" disabled><i class="fa fa-lock"></i></button></span>'
+      : '<button class="btn btn-xs btn-default act-btn text-red" data-toggle="tooltip" data-container="body"'
+        + ' title="刪除"><i class="fa fa-times"></i></button>';
+    html += '<tr>'
+      + '<td class="act-cell"><button class="btn btn-xs btn-default act-btn" data-toggle="tooltip" data-container="body"'
+      + ' title="編輯" onclick="openEdit(' + i + ')"><i class="fa fa-pencil"></i></button>' + del + '</td>'
+      + '<td>' + r.item + '</td>'
+      + '<td class="num">' + r.d + '</td><td class="num">' + r.h + '</td><td class="num">' + r.m + '</td>'
+      + '<td>' + r.s + '</td><td>' + r.e + '</td>'
+      + '<td>' + mark(r.ot) + '</td><td>' + mark(r.pp) + '</td>'
+      + '</tr>';
+  });
+  $('#detailBody').html(html);
+  $('#detailCount').text(DETAIL.length);
+  $('#detailBody [data-toggle="tooltip"]').tooltip();
+}
+
+function openEdit(i) {
+  var r = DETAIL[i];
+  $('#edItem').val(r.item);
+  $('#edD').val(r.d); $('#edH').val(r.h); $('#edM').val(r.m);
+  $('#edS').val(r.s); $('#edE').val(r.e);
+  $('#edOT').prop('checked', !!r.ot);
+  $('#edPP').prop('checked', !!r.pp);
+  $('#edPPRow').toggle(!!r.pp);
+  $('#edSrcNote').html(r.src
+    ? '　<span class="text-yellow"><i class="fa fa-lock"></i> 由' + r.src + '自動轉入，僅能修改時數</span>'
+    : '');
+  $('#mEdit').modal('show');
+}
+
+/* ---------- 主工作區 放大 / 還原 ---------- */
+function toggleZoom() {
+  var zoomed = $('body').toggleClass('wa-zoom').hasClass('wa-zoom');
+  $('#btnZoom > i').attr('class', zoomed ? 'fa fa-compress' : 'fa fa-expand');
+  $('#zoomText').text(zoomed ? '還原' : '放大');
+}
+
+$(function () {
+  renderEmp();
+  pick(0);
+  renderDetail();
+  $('.datepicker').datepicker({ language: 'zh-CN', format: 'yyyy/mm/dd', autoclose: true });
+  $('[data-toggle="tooltip"]').tooltip();
+});
+</script>
+</body>
+</html>
