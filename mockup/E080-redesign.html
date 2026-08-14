@@ -123,6 +123,40 @@
   body.wa-zoom .emp-list { max-height: none; }
   /* 彈窗改用 % 寬，避免 1920 以下被裁切 */
   .modal-dialog.modal-wide { width: 92%; max-width: 1100px; }
+
+  /* --- 舊版佈局重現（僅供新舊對照展示，樣式仿現行 E080.aspx） --- */
+  body.ui-old #contextBar,
+  body.ui-old .e080-layout { display: none; }
+  #oldLayout { display: none; padding: 10px 15px; }
+  body.ui-old #oldLayout { display: block; }
+  #oldLayout .old-area { font-size: 13px; }
+  #oldLayout .old-area label { font-weight: 700; margin: 0; }
+  #oldLayout .old-btn { background: #e9e9e9; border: 1px solid #a5a5a5; border-radius: 0;
+    padding: 2px 8px; margin: 2px 2px 2px 0; font-size: 13px; color: #222; }
+  #oldLayout .old-btn:hover { background: #dcdcdc; }
+  #oldLayout .old-input { border: 1px solid #a9a9a9; padding: 1px 4px; width: 100px;
+    font-size: 13px; background: #fff; }
+  #oldLayout select.old-input { width: auto; }
+  #oldLayout .old-row { padding-top: 5px; }
+  /* 原頁的 asp:Panel：綠框 + 固定高度 + 僅水平捲軸 */
+  #oldLayout .old-panel-green { border: 1px solid #009933; background: #fff; overflow: auto; }
+  #oldLayout .old-panel-red { border: 1px solid #ff0000; background: #fff;
+    height: 170px; overflow: auto; padding: 6px 10px; margin-top: 15px; }
+  #oldLayout .old-grid { width: 100%; border-collapse: collapse; background: #fff; }
+  #oldLayout .old-grid th, #oldLayout .old-grid td { border: 1px solid #ddd;
+    padding: 4px 6px; white-space: nowrap; text-align: left; }
+  #oldLayout .old-grid th { background: #f5f5f5; font-weight: 700; }
+  #oldLayout .old-grid tr.sel-row td { background: #99FF99; }
+  #oldLayout .old-grid a { color: #337ab7; text-decoration: underline; cursor: pointer; }
+  /* 原頁 DIV1 / DIV2：float + 固定 460px 高 */
+  #oldLayout .old-flow { border: 1px solid #009933; background: #fff;
+    height: 700px; overflow: auto; padding: 5px; }
+  #oldLayout .old-div1 { width: 60%; height: 460px; padding: 5px; margin-right: 5px; float: left; }
+  #oldLayout .old-div2 { width: 30%; height: 460px; padding: 5px; float: left; }
+  /* 說明條可打叉關閉；關閉後改以右下角固定按鈕返回新版 */
+  #oldBackFab { display: none; position: fixed; right: 20px; bottom: 20px; z-index: 1050;
+    box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+  body.ui-old.old-note-off #oldBackFab { display: block; }
 </style>
 </head>
 
@@ -289,6 +323,9 @@
               <option>08</option><option>07</option><option>06</option>
             </select>
           </form>
+          <button type="button" class="btn btn-default pull-right" onclick="toggleOldUI()"
+            data-toggle="tooltip" data-container="body" title="切換為現行 E080 的版面重現，方便新舊對照">
+            <i class="fa fa-history"></i> 切換舊版佈局</button>
         </div>
       </div>
     </div>
@@ -581,6 +618,130 @@
       </div><!-- /nav-tabs-custom -->
 
     </div><!-- /e080-layout -->
+
+    <!-- ===================== 舊版佈局重現（僅供新舊對照） ===================== -->
+    <div id="oldLayout">
+      <div class="callout callout-warning" id="oldNotice" style="margin-bottom:10px">
+        <button type="button" class="close" style="margin-left:12px" aria-label="Close"
+          data-toggle="tooltip" data-container="body" title="關閉說明條，完整檢視舊版畫面"
+          onclick="hideOldNotice()"><span aria-hidden="true">&times;</span></button>
+        <button type="button" class="btn btn-primary pull-right" onclick="toggleOldUI()">
+          <i class="fa fa-magic"></i> 回到新版佈局</button>
+        <h4><i class="fa fa-history"></i> 舊版佈局</h4>
+        <p style="margin:0">依現行 E080.aspx 版面重現，僅供對照展示，按鈕無實際功能。可按右上「&times;」關閉此說明條。</p>
+      </div>
+
+      <div class="row old-area">
+        <!-- ---------- 左欄：條件 + 按鈕牆 + 員工清單 ---------- -->
+        <div class="col-md-3">
+          <div class="old-row">
+            <label>出勤月份 :</label>&nbsp;&nbsp;&nbsp;&nbsp;
+            <select class="old-input"><option>2026</option></select>
+            <select class="old-input"><option>08</option></select>
+          </div>
+          <div class="old-row">
+            <label>部門 :</label>&nbsp;&nbsp;
+            <select class="old-input"><option>全部</option></select>
+            &nbsp;&nbsp;姓名: &nbsp;&nbsp;<input class="old-input" type="text">
+            &nbsp;&nbsp;員工編號: &nbsp;&nbsp;<input class="old-input" type="text">
+            <button type="button" class="old-btn">搜尋</button>
+          </div>
+          <div class="old-row"><button type="button" class="old-btn">匯入本月出勤資料</button></div>
+          <div>
+            <button type="button" class="old-btn">下載員工出勤資料匯入表</button>
+            <button type="button" class="old-btn">下載出勤明細橫式匯入表</button>
+            <button type="button" class="old-btn">下載出勤明細橫式資料表</button>
+          </div>
+          <div class="old-row">
+            <button type="button" class="old-btn" data-toggle="tooltip" data-container="body"
+              title="自動轉入的加班單與補休單不會被刪除，請「刪除該各項申請單」或使用「編輯更改為0」">清除此員工本月出勤紀錄</button>
+            <button type="button" class="old-btn" data-toggle="tooltip" data-container="body"
+              title="自動轉入的加班單與補休單不會被刪除，請「刪除該各項申請單」或使用「編輯更改為0」">清除所有員工本月出勤紀錄</button>
+          </div>
+          <div class="old-row"><button type="button" class="old-btn">長照出勤Excel匯入</button></div>
+
+          <div class="old-panel-green" style="height:600px; margin-top:5px">
+            <table class="old-grid">
+              <thead><tr><th>員工姓名</th><th>員工編號</th><th>計薪方式</th></tr></thead>
+              <tbody id="oldEmpBody"></tbody>
+            </table>
+          </div>
+
+          <div class="old-row">
+            <label>檢查起訖日期 :</label>&nbsp;&nbsp;&nbsp;&nbsp;
+            <input class="old-input" type="text"> ~ &nbsp;&nbsp;<input class="old-input" type="text">
+          </div>
+          <div class="old-row">
+            <button type="button" class="old-btn">此位員工打卡紀錄檢查</button>
+            <button type="button" class="old-btn">所有員工打卡紀錄檢查</button>
+          </div>
+        </div>
+
+        <!-- ---------- 右欄：綠框 Panel + DIV1(60%) / DIV2(30%) float ---------- -->
+        <div class="col-md-9">
+          <div class="old-flow">
+            <div class="old-div1">
+              <div class="old-row">
+                <button type="button" class="old-btn" data-toggle="tooltip" data-container="body"
+                  title="匯入前請檢查「出勤月份」與「申請匯入起訖日期」是否相同月份相同，避免發生不同出勤月份重複匯入的問題">此位員工線上申請紀錄匯入</button>
+                <label>申請匯入起訖日期 :</label>&nbsp;
+                <input class="old-input" type="text" value="2026/08/01"> ~
+                <input class="old-input" type="text" value="2026/08/31">
+              </div>
+              <div class="old-row">
+                <button type="button" class="old-btn" data-toggle="tooltip" data-container="body"
+                  title="匯入前請檢查「出勤月份」與「打卡匯入起訖日期」是否相同月份相同，避免發生不同出勤月份重複匯入的問題">此位員工線上打卡紀錄匯入</button>
+                <label>打卡匯入起訖日期 :</label>&nbsp;
+                <input class="old-input" type="text" value="2026/08/01"> ~
+                <input class="old-input" type="text" value="2026/08/31">
+              </div>
+              <div class="old-row">
+                <button type="button" class="old-btn">所有員工線上申請紀錄匯入</button>
+                <button type="button" class="old-btn">所有員工線上打卡紀錄匯入</button>
+              </div>
+              <div class="old-row"><label>當月出勤明細 :</label></div>
+              <div class="old-panel-green" style="height:500px">
+                <table class="old-grid">
+                  <thead><tr><th></th><th></th><th>出勤項目</th><th>日</th><th>時</th><th>分</th>
+                    <th>開始時間</th><th>結束時間</th><th>加班換補休</th><th>特休遞延</th></tr></thead>
+                  <tbody id="oldDetailBody"></tbody>
+                </table>
+              </div>
+              <div class="old-row"><button type="button" class="old-btn">新增</button></div>
+            </div>
+
+            <div class="old-div2">
+              <div class="old-row"><label>當月出勤統計 :</label></div>
+              <div class="old-panel-green" style="height:450px">
+                <table class="old-grid">
+                  <thead><tr><th>出勤項目</th><th>日</th><th>時</th><th>分</th></tr></thead>
+                  <tbody>
+                    <tr><td>正常出勤</td><td>18</td><td>0</td><td>0</td></tr>
+                    <tr><td>平日延長工時加班</td><td>0</td><td>14</td><td>30</td></tr>
+                    <tr><td>休息日加班</td><td>0</td><td>8</td><td>0</td></tr>
+                    <tr><td>加班補休</td><td>0</td><td>4</td><td>0</td></tr>
+                    <tr><td>特別休假</td><td>1</td><td>0</td><td>0</td></tr>
+                    <tr><td>病假</td><td>0</td><td>4</td><td>0</td></tr>
+                    <tr><td>事假</td><td>0</td><td>4</td><td>0</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="old-panel-red">
+                加班換補休起訖日期：2026/02/02 ~ 2027/02/01<br>
+                累計加班換補休時數：26.5<br>
+                累計已補休時數：4<br>
+                累積已補休同意尚未發生時數：4<br>
+                累計申請中補休時數：2<br>
+                剩餘可申請補休時數：16.5
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 說明條關閉後的返回入口 -->
+      <button type="button" id="oldBackFab" class="btn btn-primary" onclick="toggleOldUI()">
+        <i class="fa fa-magic"></i> 回到新版佈局</button>
+    </div><!-- /oldLayout -->
   </div><!-- /content-wrapper -->
 
   <footer class="main-footer">
@@ -990,10 +1151,52 @@ function toggleZoom() {
   $('#zoomText').text(zoomed ? '還原' : '放大');
 }
 
+/* ---------- 新舊版佈局切換（舊版僅供對照展示） ---------- */
+function toggleOldUI() {
+  if (!$('body').hasClass('ui-old') && $('body').hasClass('wa-zoom')) toggleZoom();
+  var nowOld = $('body').toggleClass('ui-old').hasClass('ui-old');
+  if (!nowOld) {          // 回新版時重設說明條，下次進舊版重新顯示
+    $('#oldNotice').show();
+    $('body').removeClass('old-note-off');
+  }
+  window.scrollTo(0, 0);
+}
+
+function hideOldNotice() {
+  $('#oldNotice').hide();
+  $('body').addClass('old-note-off');
+}
+
+/* 舊版表格沿用同一份假資料：員工全欄位輸出、選取列亮綠底 */
+function renderOldTables() {
+  var html = '';
+  $.each(EMP, function (i, e) {
+    html += '<tr' + (i === sel ? ' class="sel-row"' : '') + '>'
+      + '<td><a href="javascript:;">' + e.n + '</a></td>'
+      + '<td>' + e.c + '</td><td>' + e.p + '</td></tr>';
+  });
+  $('#oldEmpBody').html(html);
+
+  html = '';
+  $.each(DETAIL, function (i, r) {
+    html += '<tr>'
+      + '<td><a href="javascript:;">編輯</a></td>'
+      + '<td>' + (r.src ? '' : '<a href="javascript:;">刪除</a>') + '</td>'
+      + '<td>' + r.item + '</td>'
+      + '<td>' + r.d + '</td><td>' + r.h + '</td><td>' + r.m + '</td>'
+      + '<td>' + r.s + '</td><td>' + r.e + '</td>'
+      + '<td><input type="checkbox" disabled' + (r.ot ? ' checked' : '') + '></td>'
+      + '<td><input type="checkbox" disabled' + (r.pp ? ' checked' : '') + '></td>'
+      + '</tr>';
+  });
+  $('#oldDetailBody').html(html);
+}
+
 $(function () {
   renderEmp();
   pick(0);
   renderDetail();
+  renderOldTables();
   $('.datepicker').datepicker({ language: 'zh-CN', format: 'yyyy/mm/dd', autoclose: true });
   $('[data-toggle="tooltip"]').tooltip();
 });

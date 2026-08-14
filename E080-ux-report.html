@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>出勤資料頁 UI/UX 改良提案</title>
+<link rel="stylesheet" href="mockup/bootstrap/css/bootstrap.min.css">
+<style>
+  :root{
+    --ink:#2c3e50; --sub:#6b7a8a; --line:#e4e9ee;
+    --blue:#3c8dbc; --blue-d:#2c6d92; --green:#00a65a; --red:#dd4b39; --amber:#f39c12;
+    --bg:#f4f6f9;
+  }
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:"Microsoft JhengHei","Segoe UI",Arial,sans-serif;
+    color:var(--ink); background:var(--bg);
+    font-size:17px; line-height:1.75; margin:0;
+  }
+  .wrap{max-width:1080px; margin:0 auto; padding:0 24px;}
+
+  /* ---------- hero ---------- */
+  .hero{background:linear-gradient(135deg,#367fa9 0%,#3c8dbc 55%,#5aa4cc 100%); color:#fff; padding:64px 0 56px;}
+  .hero .tag{display:inline-block; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.4);
+    border-radius:99px; padding:2px 16px; font-size:14px; letter-spacing:1px; margin-bottom:18px;}
+  .hero h1{font-size:40px; font-weight:700; margin:0 0 10px; line-height:1.35;}
+  .hero .path{font-size:17px; opacity:.92; margin-bottom:6px;}
+  .hero .lede{font-size:19px; opacity:.95; max-width:760px; margin:14px 0 30px;}
+  .btn-demo{display:inline-block; background:#fff; color:var(--blue-d); font-size:20px; font-weight:700;
+    padding:14px 34px; border-radius:8px; text-decoration:none; box-shadow:0 4px 14px rgba(0,0,0,.18);}
+  .btn-demo:hover,.btn-demo:focus{background:#eef6fb; color:var(--blue-d); text-decoration:none;}
+  .hero small{display:block; margin-top:10px; font-size:14px; opacity:.85;}
+
+  /* ---------- benefit cards ---------- */
+  .benefits{margin-top:-34px;}
+  .benefit-row{display:grid; grid-template-columns:repeat(4,1fr); gap:16px;}
+  .benefit{background:#fff; border-radius:10px; padding:20px 18px; box-shadow:0 2px 10px rgba(44,62,80,.10);}
+  .benefit .b-icon{font-size:26px; margin-bottom:6px;}
+  .benefit h3{font-size:17px; font-weight:700; margin:0 0 6px;}
+  .benefit p{font-size:14.5px; color:var(--sub); margin:0;}
+  @media (max-width:900px){.benefit-row{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:560px){.benefit-row{grid-template-columns:1fr;}}
+
+  /* ---------- 目錄（吸頂導覽） ---------- */
+  #toc{position:sticky; top:0; z-index:100; margin-top:34px;
+    background:rgba(255,255,255,.97); border-bottom:1px solid var(--line);
+    box-shadow:0 1px 6px rgba(44,62,80,.08);}
+  #toc .wrap{display:flex; align-items:center; gap:2px; overflow-x:auto; -webkit-overflow-scrolling:touch;}
+  #toc .toc-label{flex:none; font-size:13px; color:#9aa8b5; letter-spacing:1px;
+    padding-right:12px; margin-right:4px; border-right:1px solid var(--line);}
+  #toc a{flex:none; white-space:nowrap; padding:13px 14px; font-size:15px;
+    color:var(--sub); text-decoration:none; border-bottom:3px solid transparent;}
+  #toc a:hover,#toc a:focus{color:var(--blue-d); background:#f2f7fb; text-decoration:none;}
+  #toc a.on{color:var(--blue-d); font-weight:700; border-bottom-color:var(--blue);}
+  @media (max-width:640px){ #toc .toc-label{display:none;} #toc a{padding:12px 10px; font-size:14px;} }
+
+  /* ---------- sections ---------- */
+  section{padding:56px 0 8px; scroll-margin-top:52px;}
+  .sec-kicker{color:var(--blue); font-weight:700; font-size:14px; letter-spacing:2px;}
+  h2.sec-title{font-size:29px; font-weight:700; margin:4px 0 6px;}
+  .sec-note{color:var(--sub); margin-bottom:26px;}
+
+  /* ---------- pain list ---------- */
+  .pain{background:#fff; border:1px solid var(--line); border-left:4px solid var(--red);
+    border-radius:8px; padding:16px 20px; margin-bottom:14px;}
+  .pain b{font-size:17.5px;}
+  .pain p{margin:4px 0 0; color:var(--sub); font-size:15.5px;}
+
+  /* ---------- screenshots ---------- */
+  .shot-pair{display:grid; grid-template-columns:1fr 1fr; gap:22px; margin:26px 0 10px;}
+  @media (max-width:820px){.shot-pair{grid-template-columns:1fr;}}
+  .shot{background:#fff; border:1px solid var(--line); border-radius:10px; padding:14px; box-shadow:0 2px 8px rgba(44,62,80,.06);}
+  .shot h4{margin:0 0 10px; font-size:16px; font-weight:700; text-align:center;}
+  .shot h4 .lbl{border-radius:4px; padding:2px 12px; font-size:13px; margin-right:8px;}
+  .lbl-old{background:#fbe4e1; color:#b03225;}
+  .lbl-new{background:#dff0e6; color:#0c7a44;}
+  .shot img{width:100%; height:auto; display:block; border:1px solid #dfe6ec; border-radius:4px;
+    cursor:zoom-in; transition:box-shadow .15s;}
+  .shot img:hover{box-shadow:0 0 0 3px rgba(60,141,188,.45);}
+  .shot .cap{margin:10px 2px 0; font-size:14px; color:var(--sub);}
+  .shot .zoom-hint{margin:8px 2px 0; font-size:13px; color:var(--blue);}
+
+  /* ---------- lightbox：點圖開新舊並排大圖 ---------- */
+  #lightbox{position:fixed; inset:0; z-index:1000; background:rgba(15,22,30,.97);
+    display:flex; flex-direction:column; padding:20px 24px;}
+  #lightbox[hidden]{display:none;}
+  .lb-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+  .lb-title{color:#fff; font-size:18px; font-weight:700;}
+  .lb-close{background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.35);
+    border-radius:6px; font-size:16px; padding:6px 18px; cursor:pointer;}
+  .lb-close:hover{background:rgba(255,255,255,.24);}
+  .lb-mode{display:flex; gap:6px;}
+  .lb-mode button{background:rgba(255,255,255,.12); color:#dfe8f0;
+    border:1px solid rgba(255,255,255,.3); border-radius:6px; padding:5px 14px;
+    font-size:14px; cursor:pointer;}
+  .lb-mode button:hover{background:rgba(255,255,255,.22);}
+  .lb-mode button.on{background:var(--blue); border-color:var(--blue); color:#fff;}
+  .lb-grid{flex:1; min-height:0; display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  @media (max-width:900px){.lb-grid{grid-template-columns:1fr; overflow-y:auto;}}
+  .lb-grid figure{margin:0; min-height:0; min-width:0; display:flex; flex-direction:column;}
+  .lb-grid figcaption{color:#e8eef4; text-align:center; margin-bottom:8px; font-size:15px; font-weight:700;}
+  .lb-grid figcaption .lbl{border-radius:4px; padding:2px 14px;}
+  .lb-pane{flex:1; min-height:0;}
+  .lb-grid img{display:block; border:1px solid rgba(255,255,255,.25); border-radius:4px; background:#1b232c;}
+  /* 適應視窗：整張圖縮到面板內完整可見 */
+  .lb-grid.mode-fit .lb-pane{display:flex;}
+  .lb-grid.mode-fit img{width:100%; height:100%; min-height:0; object-fit:contain;}
+  /* 佔滿全版：改單欄堆疊，每張撐滿整個版面寬，整體上下捲動 */
+  .lb-grid.mode-wide{grid-template-columns:1fr; overflow-y:auto;}
+  .lb-grid.mode-wide figure{min-height:auto;}
+  .lb-grid.mode-wide img{width:100%; height:auto;}
+  /* 原圖大小：1:1 像素，左右面板各自捲動 */
+  .lb-grid.mode-full .lb-pane{overflow:auto;}
+  .lb-grid.mode-full img{width:auto; max-width:none; height:auto;}
+  .lb-tip{color:#9fb2c2; font-size:13px; text-align:center; margin-top:10px;}
+
+  /* ---------- compare table ---------- */
+  .cmp{width:100%; background:#fff; border:1px solid var(--line); border-radius:10px; border-collapse:separate; border-spacing:0; overflow:hidden;}
+  .cmp th{background:#34495e; color:#fff; font-size:15.5px; padding:10px 14px; text-align:left; font-weight:700;}
+  .cmp td{padding:11px 14px; border-top:1px solid var(--line); font-size:15px; vertical-align:top;}
+  .cmp td.t{font-weight:700; white-space:nowrap; color:var(--blue-d);}
+  .cmp td.good{color:#0c7a44;}
+  .cmp tr:nth-child(even) td{background:#fafcfe;}
+  .tbl-scroll{overflow-x:auto;}
+
+  /* ---------- tech cards ---------- */
+  .tech-row{display:grid; grid-template-columns:repeat(2,1fr); gap:16px;}
+  @media (max-width:820px){.tech-row{grid-template-columns:1fr;}}
+  .tech{background:#fff; border:1px solid var(--line); border-radius:10px; padding:18px 20px;}
+  .tech h3{font-size:17px; font-weight:700; margin:0 0 8px; color:var(--blue-d);}
+  .tech ul{padding-left:20px; margin:0; color:#42525f; font-size:15px;}
+  .tech li{margin-bottom:5px;}
+
+  /* ---------- roadmap ---------- */
+  .phase{display:flex; gap:16px; background:#fff; border:1px solid var(--line); border-radius:10px; padding:16px 20px; margin-bottom:14px;}
+  .phase .no{flex:0 0 44px; height:44px; border-radius:50%; background:var(--blue); color:#fff;
+    font-size:20px; font-weight:700; display:flex; align-items:center; justify-content:center;}
+  .phase h3{margin:0 0 4px; font-size:17.5px; font-weight:700;}
+  .phase p{margin:0; color:var(--sub); font-size:15px;}
+  .risk{background:#fff8ec; border:1px solid #f3d9a4; border-left:4px solid var(--amber); border-radius:8px; padding:14px 20px; margin-top:20px;}
+  .risk b{color:#a06a00;}
+  .risk ul{margin:6px 0 0; padding-left:20px; font-size:15px; color:#5a4a2a;}
+
+  /* ---------- appendix ---------- */
+  details.appx{background:#fff; border:1px solid var(--line); border-radius:10px; padding:0 20px; margin:20px 0 60px;}
+  details.appx summary{cursor:pointer; padding:16px 0; font-size:17px; font-weight:700; color:var(--blue-d); outline:none;}
+  details.appx[open] summary{border-bottom:1px solid var(--line);}
+  details.appx .tbl-scroll{margin:16px 0 20px;}
+
+  footer{background:#2c3e50; color:#aeb9c4; font-size:14px; padding:22px 0; margin-top:20px;}
+
+  /* ---------- print ---------- */
+  @media print{
+    body{background:#fff; font-size:13px;}
+    .hero{padding:30px 0;}
+    .btn-demo, #toc{display:none;}
+    details.appx{display:block;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= 封面 ================= -->
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">UI/UX 改良提案 · 互動原型已完成</span>
+    <h1>出勤資料頁面 改良提案</h1>
+    <div class="path">功能位置：企業管理專區 &gt; 員工資料設定 &gt; 出勤資料（E080）</div>
+    <p class="lede">
+      出勤資料頁是每月<b>出勤登打、線上單據匯入、打卡紀錄檢查</b>的核心作業頁面。
+      本次以不動正式系統的方式，先做出可以實際點擊操作的改良原型，
+      將原本擠在同一畫面的十多顆按鈕，重新整理成清楚的作業動線。
+    </p>
+    <a class="btn-demo" href="mockup/E080-redesign.html" target="_blank">▶ 開啟互動原型（可實際點擊操作）</a>
+    <small>原型為靜態展示頁，使用假資料，不會影響正式系統。內建「切換舊版佈局」按鈕，可一鍵切回現行版面現場對照。</small>
+  </div>
+</header>
+
+<!-- ================= 效益 ================= -->
+<div class="benefits">
+  <div class="wrap">
+    <div class="benefit-row">
+      <div class="benefit">
+        <div class="b-icon">🗂️</div>
+        <h3>作業分流，不再誤點</h3>
+        <p>十多顆同色按鈕改為三個作業頁籤，一次只看到當下任務需要的功能。</p>
+      </div>
+      <div class="benefit">
+        <div class="b-icon">🛡️</div>
+        <h3>防呆保護整月資料</h3>
+        <p>「清除所有員工紀錄」需輸入月份才能執行，杜絕一鍵誤刪整月出勤。</p>
+      </div>
+      <div class="benefit">
+        <div class="b-icon">⚡</div>
+        <h3>編輯順暢不刷頁</h3>
+        <p>逐格修改改為彈出視窗編輯，欄位有標題、有空間，畫面不再整頁重新整理。</p>
+      </div>
+      <div class="benefit">
+        <div class="b-icon">🖥️</div>
+        <h3>大小螢幕都好用</h3>
+        <p>版面改為自動適應，小筆電到大螢幕都完整呈現，不再被裁切出現雙層捲軸。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 目錄（吸頂導覽） ================= -->
+<nav id="toc">
+  <div class="wrap">
+    <span class="toc-label">目錄</span>
+    <a href="#pain">現況痛點</a>
+    <a href="#arch">新版架構</a>
+    <a href="#compare">改良對照</a>
+    <a href="#tech">技術說明</a>
+    <a href="#roadmap">導入規劃</a>
+    <a href="#appendix">完整清單</a>
+  </div>
+</nav>
+
+<!-- ================= 現況痛點 ================= -->
+<section id="pain">
+  <div class="wrap">
+    <div class="sec-kicker">01 WHY</div>
+    <h2 class="sec-title">現況痛點</h2>
+    <p class="sec-note">現行頁面功能齊全，但十多年累積下來，操作介面已出現以下問題：</p>
+
+    <div class="pain"><b>按鈕牆：十多顆同色按鈕擠在左欄</b>
+      <p>匯入、下載範本、清除單人、清除全部……全部長得一模一樣、沒有分組，新手要靠記憶找按鈕，日常動作與危險動作混在一起。</p></div>
+    <div class="pain"><b>誤刪風險：清除整月資料只有一個確認框</b>
+      <p>「清除所有員工紀錄」按下去只跳一個「確定/取消」，手滑點過就會刪掉全公司整月出勤資料。</p></div>
+    <div class="pain"><b>重要規則藏在滑鼠提示裡</b>
+      <p>「自動轉入的加班單與補休單不會被刪除」這類關鍵規則，只有滑鼠停在按鈕上才看得到，實務上幾乎沒人發現。</p></div>
+    <div class="pain"><b>逐格編輯體驗差，整頁不斷刷新</b>
+      <p>在表格內直接編輯，一列九個欄位擠在窄欄裡；改一個下拉選單整頁就重新整理一次，還得自動捲動找回剛剛編輯的位置。</p></div>
+    <div class="pain"><b>版面尺寸寫死，小螢幕被裁切</b>
+      <p>各區塊高度、寬度都是固定像素，筆電或投影解析度較低時內容被切掉，出現「捲軸裡還有捲軸」。</p></div>
+    <div class="pain"><b>跨月匯入是事後才攔截</b>
+      <p>匯入區間與出勤月份不一致時，要等按下按鈕才跳警告；使用者常在警告出現後才發現填錯。</p></div>
+
+    <div class="shot-pair">
+      <div class="shot">
+        <h4><span class="lbl lbl-old">改良前</span>正式系統實際畫面</h4>
+        <img src="img/before-overview.png" alt="改良前：現行出勤資料頁全景">
+        <p class="cap">所有功能攤平在同一畫面：左欄十多顆同色按鈕無分組、無主次，「清除所有員工」混在日常按鈕之中；固定高度的綠框、紅框面板讓內容被裁切。</p>
+      </div>
+      <div class="shot">
+        <h4><span class="lbl lbl-new">改良後</span>互動原型畫面</h4>
+        <img src="img/after-overview.png" alt="改良後：新版出勤資料頁全景">
+        <p class="cap">條件在上、名單在左、作業分三個頁籤；危險動作獨立為紅色選單，打卡異常數量直接顯示在頁籤上，補休剩餘時數綠底大字呈現。</p>
+      </div>
+    </div>
+
+    <div class="shot-pair">
+      <div class="shot">
+        <h4><span class="lbl lbl-old">改良前</span>表格內逐格編輯</h4>
+        <img src="img/before-inline-edit.png" alt="改良前：GridView 行內編輯">
+        <p class="cap">按下「編輯」後整列變成擠在窄欄裡的輸入框與下拉選單，右側欄位被推出畫面；改一個下拉整頁就重新整理一次。</p>
+      </div>
+      <div class="shot">
+        <h4><span class="lbl lbl-new">改良後</span>彈窗編輯</h4>
+        <img src="img/after-edit-modal.png" alt="改良後：Bootstrap modal 編輯">
+        <p class="cap">欄位有標題、分區與呼吸空間；由加班單自動轉入的資料會明確提示「僅能修改時數」，不再靠猜。</p>
+      </div>
+    </div>
+
+    <div class="shot-pair">
+      <div class="shot">
+        <h4><span class="lbl lbl-old">改良前</span>自製浮動面板</h4>
+        <img src="img/before-popup.png" alt="改良前：display:none 假彈窗">
+        <p class="cap">「新增」開啟的是絕對定位的自製面板：無遮罩、無框線階層、蓋在表格上，位置寫死在畫面 45% 處。</p>
+      </div>
+      <div class="shot">
+        <h4><span class="lbl lbl-new">改良後</span>標準彈窗＋防呆</h4>
+        <img src="img/after-wipe-modal.png" alt="改良後：清除全部需輸入月份確認">
+        <p class="cap">標準 Bootstrap 彈窗有遮罩與焦點管理；高風險的「清除所有員工」需輸入月份字串才能按下確認，並先揭示影響人數與筆數。</p>
+      </div>
+    </div>
+
+    <p class="sec-note" style="margin-top:14px"><i class="glyphicon glyphicon-zoom-in"></i> <b>點任一張圖</b>可開啟全螢幕新舊並排對照。「改良前」為正式系統（測試環境資料）實際畫面；「改良後」為互動原型畫面。原型內建「切換舊版佈局」按鈕，簡報時可現場一鍵對照。</p>
+  </div>
+</section>
+
+<!-- ================= 新版架構 ================= -->
+<section id="arch">
+  <div class="wrap">
+    <div class="sec-kicker">02 WHAT</div>
+    <h2 class="sec-title">新版架構總覽</h2>
+    <p class="sec-note">畫面依「先選條件 → 再選人 → 再作業」的順序重新分層：</p>
+
+    <div class="tech-row">
+      <div class="tech">
+        <h3>① 出勤月份列（全頁統一條件）</h3>
+        <ul>
+          <li>年、月選擇器移到頁面最上方，成為整頁唯一的全域條件。</li>
+          <li>匯入、檢查等區間預設自動同步此月份，從源頭避免跨月誤匯。</li>
+        </ul>
+      </div>
+      <div class="tech">
+        <h3>② 員工清單卡片化</h3>
+        <ul>
+          <li>原本十欄表格（其中七欄被隱藏）改為卡片：姓名粗體＋「編號 · 部門 · 計薪方式」副標。</li>
+          <li>部門下拉＋單一關鍵字框（姓名/編號合併），少填一格、少一次判斷。</li>
+          <li>選中員工以藍色側條標示，且姓名同步顯示在工具列、彈窗標題與清除確認中——隨時知道「現在在操作誰」。</li>
+        </ul>
+      </div>
+      <div class="tech">
+        <h3>③ 三個作業頁籤</h3>
+        <ul>
+          <li><b>出勤明細與統計</b>：日常登打、修改與當月統計、加班換補休資訊。</li>
+          <li><b>匯入 / 匯出</b>：線上申請/打卡匯入、Excel 匯入、範本與資料下載集中管理。</li>
+          <li><b>打卡紀錄檢查</b>：檢查條件、結果表格化、可匯出；異常筆數以紅色數字顯示在頁籤上，主動提醒。</li>
+        </ul>
+      </div>
+      <div class="tech">
+        <h3>④ 放大 / 還原模式</h3>
+        <ul>
+          <li>一鍵隱藏月份列與員工清單，明細表拉到近乎全螢幕。</li>
+          <li>月底大量核對明細時不必調整瀏覽器縮放。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 改良對照 ================= -->
+<section id="compare">
+  <div class="wrap">
+    <div class="sec-kicker">03 BEFORE → AFTER</div>
+    <h2 class="sec-title">重點改良對照</h2>
+    <p class="sec-note">精選 12 項使用者最有感的改良（完整 24 項清單見文末附錄）：</p>
+
+    <div class="tbl-scroll">
+      <table class="cmp">
+        <thead><tr><th style="width:16%">項目</th><th style="width:30%">原本</th><th style="width:30%">改成</th><th>好處</th></tr></thead>
+        <tbody>
+          <tr><td class="t">功能編排</td><td>10+ 顆同色按鈕堆在左欄，無分組</td><td>依任務拆成三個頁籤</td><td class="good">一次只看到當下任務需要的功能，畫面清爽</td></tr>
+          <tr><td class="t">清除防呆</td><td>清除全部員工紀錄只有一個確認框</td><td>彈窗顯示影響人數/筆數，且<b>需輸入月份字串才能按下確認</b></td><td class="good">高風險操作加上刻意門檻，整月資料不再一鍵誤刪</td></tr>
+          <tr><td class="t">危險動作隔離</td><td>清除按鈕與一般按鈕同色並排</td><td>獨立紅色選單，放在工具列最右側</td><td class="good">視覺上與日常動作分開，降低誤點</td></tr>
+          <tr><td class="t">明細編輯</td><td>表格內逐格編輯，改下拉整頁刷新</td><td>彈出視窗編輯，欄位分區、天/時/分清楚標示</td><td class="good">編輯有呼吸空間，不再刷頁、不再跳位</td></tr>
+          <tr><td class="t">關鍵規則呈現</td><td>「自動轉入單據不會被刪除」只藏在滑鼠提示</td><td>選單說明、表尾圖例、鎖頭圖示提示、編輯彈窗四處可見</td><td class="good">規則在使用當下看得到，減少詢問與誤解</td></tr>
+          <tr><td class="t">不可刪除列</td><td>刪除鈕直接消失，像是漏掉</td><td>顯示鎖頭圖示＋來源說明（如：由加班單自動轉入）</td><td class="good">使用者知道「不是壞了，是不能刪」</td></tr>
+          <tr><td class="t">跨月匯入</td><td>按下按鈕才跳警告攔截</td><td>區間預設同步出勤月份；相符顯示綠色提示、跨月顯示黃色警示且按鈕變紅</td><td class="good">從事後攔截變成事前預防＋即時回饋</td></tr>
+          <tr><td class="t">匯入範圍選擇</td><td>「此員工/所有員工」做成四顆並排按鈕</td><td>收成兩個下拉選單，第二層再選範圍</td><td class="good">按鈕數減半，範圍選擇清楚明確</td></tr>
+          <tr><td class="t">檢查結果</td><td>純文字清單框，無欄位、不能排序</td><td>表格化（姓名/部門/電話/班別/訊息）＋可匯出 Excel</td><td class="good">可讀、可對齊、可追蹤</td></tr>
+          <tr><td class="t">異常提醒</td><td>要點進檢查才知道有無異常</td><td>頁籤上顯示紅色異常筆數＋上次檢查結果摘要</td><td class="good">異常主動被看見，而非被動查詢</td></tr>
+          <tr><td class="t">補休資訊</td><td>數字擠在紅框小面板</td><td>逐項條列，「剩餘可申請補休時數」綠底大字</td><td class="good">最常被詢問的數字一眼可見</td></tr>
+          <tr><td class="t">螢幕適應</td><td>各區固定像素高寬，小螢幕被裁切</td><td>版面自動適應三種螢幕寬度，表頭捲動時固定不消失</td><td class="good">小筆電到大螢幕都完整可用</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 技術說明 ================= -->
+<section id="tech">
+  <div class="wrap">
+    <div class="sec-kicker">04 HOW</div>
+    <h2 class="sec-title">技術說明</h2>
+    <p class="sec-note">原型刻意零新依賴，全部沿用系統既有技術棧，將導入成本降到最低：</p>
+
+    <div class="tech-row">
+      <div class="tech">
+        <h3>零新框架，沿用既有資產</h3>
+        <ul>
+          <li>Bootstrap 3.3.7、AdminLTE 2、jQuery 2.2.3、bootstrap-datepicker 全部取自現行專案。</li>
+          <li>沿用 E01_Style.css 與 E01.Master 的 header / 側選單結構，視覺與現行系統完全一致。</li>
+          <li>不需引入任何新套件、不需升級前端框架。</li>
+        </ul>
+      </div>
+      <div class="tech">
+        <h3>彈窗標準化</h3>
+        <ul>
+          <li>原本 4 個 display:none 絕對定位的假彈窗 Panel ＋ 6 個自訂顯示/隱藏函式，全面改為標準 Bootstrap modal。</li>
+          <li>自動獲得遮罩、ESC 關閉、焦點管理；寫死 1280px 的寬度改為百分比＋上限。</li>
+        </ul>
+      </div>
+      <div class="tech">
+        <h3>版面與樣式現代化</h3>
+        <ul>
+          <li>固定像素高度（460/500/600/700px）＋ float 排版，改為 CSS Grid ＋ 視窗比例高度，設三個響應斷點。</li>
+          <li>表頭 sticky 固定、數字欄右對齊等表格細節統一處理。</li>
+          <li>4 段各自宣告的 datepicker 初始化收斂為一行統一設定。</li>
+        </ul>
+      </div>
+      <div class="tech">
+        <h3>減少 PostBack 與隱藏欄位</h3>
+        <ul>
+          <li>編輯移入 modal 後，可移除表格內含 AutoPostBack 的下拉與捲動補救程式。</li>
+          <li>員工清單原以 CSS 隱藏 7 個欄位仍全量輸出，改版後僅呈現必要資訊。</li>
+          <li>年份下拉 23 個寫死項目，正式導入時改為動態產生。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 導入規劃 ================= -->
+<section id="roadmap">
+  <div class="wrap">
+    <div class="sec-kicker">05 NEXT</div>
+    <h2 class="sec-title">後續導入規劃</h2>
+    <p class="sec-note">目前完成的是<b>可操作的靜態原型</b>，尚未修改正式系統。建議依下列階段導入：</p>
+
+    <div class="phase"><div class="no">1</div><div>
+      <h3>規格確認（本次報告）</h3>
+      <p>以本原型為畫面與行為規格，收斂資訊部門、顧問師與管理層的意見，定版後不再重新發散。</p>
+    </div></div>
+    <div class="phase"><div class="no">2</div><div>
+      <h3>正式頁面版面移植</h3>
+      <p>將原型的頁籤結構、工具列、員工清單移植到正式 E080 頁面，先做到「長得一樣」，後端邏輯不動。</p>
+    </div></div>
+    <div class="phase"><div class="no">3</div><div>
+      <h3>後端接線與行為改造</h3>
+      <p>逐格編輯改為彈窗編輯、清除防呆（輸入月份確認）、跨月檢核前移、檢查結果表格化。此階段工作量最大，可再細分批次上線。</p>
+    </div></div>
+    <div class="phase"><div class="no">4</div><div>
+      <h3>測試、驗收與上線</h3>
+      <p>以實際月結流程演練（登打 → 匯入 → 檢查 → 清除重匯），由人資實際操作驗收後切換上線。</p>
+    </div></div>
+
+    <div class="risk">
+      <b>⚠ 風險與注意事項</b>
+      <ul>
+        <li>明細表格由「表格內編輯」改為「彈窗編輯」是工作量最大的一段，建議獨立估時並優先處理。</li>
+        <li>現行頁面多處依賴整頁 PostBack 與自訂彈窗函式，改造時需逐一確認既有行為（含匯入確認流程）不被破壞。</li>
+        <li>原型使用假資料，欄位內容與權限控制需在移植時對回正式資料來源與既有權限機制。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 附錄 ================= -->
+<section id="appendix" style="padding-top:32px;">
+  <div class="wrap">
+    <details class="appx">
+      <summary>附錄：完整改良清單（24 項）</summary>
+      <div class="tbl-scroll">
+        <table class="cmp">
+          <thead><tr><th style="width:4%">#</th><th style="width:32%">原本</th><th style="width:32%">改成</th><th>好處</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>左欄堆 10+ 顆同色按鈕</td><td>依任務拆成三個頁籤：明細與統計 / 匯入匯出 / 打卡檢查</td><td>一次只看到當下任務需要的動作</td></tr>
+            <tr><td>2</td><td>匯入「此員工/所有員工」為 4 顆並排按鈕</td><td>收斂成 2 個下拉選單，第二層選作用範圍</td><td>按鈕數減半，範圍選擇明確</td></tr>
+            <tr><td>3</td><td>清除紀錄按鈕與一般按鈕同色</td><td>獨立紅色下拉選單置於工具列右側</td><td>破壞性動作視覺隔離，降低誤點</td></tr>
+            <tr><td>4</td><td>清除全部只有一個確認框</td><td>彈窗顯示影響人數/筆數，需輸入月份字串才啟用確認鈕</td><td>高風險操作加上刻意摩擦</td></tr>
+            <tr><td>5</td><td>「自動轉入單據不會被刪除」只在滑鼠提示</td><td>選單說明、表尾圖例、鎖頭提示、編輯彈窗四處可見</td><td>關鍵規則在使用當下可見</td></tr>
+            <tr><td>6</td><td>表格內逐格編輯＋下拉整頁刷新</td><td>彈窗編輯，欄位分區、天/時/分標示清楚</td><td>不需整頁刷新、不需捲動補救</td></tr>
+            <tr><td>7</td><td>不可刪除的列直接隱藏刪除鈕</td><td>保留位置改為鎖頭圖示＋來源說明</td><td>使用者知道「不是漏了，是不能刪」</td></tr>
+            <tr><td>8</td><td>編輯/刪除是文字連結，佔欄寬</td><td>鉛筆/叉/鎖圖示按鈕，操作欄縮窄</td><td>寬度還給資料欄，減少橫向捲軸</td></tr>
+            <tr><td>9</td><td>員工清單 10 欄表格（7 欄 CSS 隱藏）</td><td>卡片式：姓名粗體＋編號 · 部門 · 計薪方式副標</td><td>掃視更快，不輸出用不到的欄位</td></tr>
+            <tr><td>10</td><td>選中員工只靠綠色底色</td><td>藍色側條＋淡藍底，姓名同步顯示於工具列/彈窗/確認文字</td><td>隨時知道目前操作對象</td></tr>
+            <tr><td>11</td><td>部門、姓名、員工編號三個獨立輸入</td><td>部門下拉＋單一關鍵字框（姓名/編號合併）</td><td>少一個欄位、少一次判斷</td></tr>
+            <tr><td>12</td><td>年份 23 個寫死選項＋AutoPostBack</td><td>頁面頂端月份列，作為全頁唯一全域條件</td><td>條件與動作分層清楚</td></tr>
+            <tr><td>13</td><td>匯入區間空白，按下才比對跨月警告</td><td>區間預設同步出勤月份；相符綠色、跨月黃色警示且主鈕變紅</td><td>事後攔截 → 事前預防＋即時回饋</td></tr>
+            <tr><td>14</td><td>4 段各自宣告的 datepicker 初始化</td><td>統一一行初始化所有日期欄位</td><td>行為一致，新增欄位免補程式</td></tr>
+            <tr><td>15</td><td>4 個 display:none 假彈窗＋6 個自訂顯示/隱藏函式</td><td>全部改為標準 Bootstrap modal</td><td>有遮罩、ESC 關閉、焦點管理</td></tr>
+            <tr><td>16</td><td>檢查結果用純文字清單框</td><td>表格化＋寬彈窗＋匯出 Excel</td><td>可讀、可對齊、可延伸</td></tr>
+            <tr><td>17</td><td>檢查異常無入口提示</td><td>頁籤紅色異常筆數＋上次檢查摘要</td><td>異常主動被發現</td></tr>
+            <tr><td>18</td><td>加班換補休資訊擠在紅框面板</td><td>逐項條列，剩餘可申請時數綠底大字</td><td>最常被問的數字一眼可見</td></tr>
+            <tr><td>19</td><td>固定像素高寬＋float＋水平捲軸</td><td>CSS Grid＋視窗比例高度＋三個響應斷點</td><td>各種螢幕完整可用，去除雙層捲軸</td></tr>
+            <tr><td>20</td><td>表頭捲動即消失</td><td>表頭固定（sticky）</td><td>長清單捲動仍知道欄位意義</td></tr>
+            <tr><td>21</td><td>無法暫時擴大工作區</td><td>放大/還原模式：隱藏條件與名單，表格近全螢幕</td><td>大量核對時獲得全寬視野</td></tr>
+            <tr><td>22</td><td>日/時/分數字左對齊</td><td>數字右對齊＋等寬數字</td><td>位數對齊，核帳比對更快</td></tr>
+            <tr><td>23</td><td>測試用按鈕殘留在正式頁面</td><td>新版不保留</td><td>正式頁面不含測試元件</td></tr>
+            <tr><td>24</td><td>長照匯入按鈕樣式與其他不一致</td><td>併入「匯入/匯出」頁籤 Excel 匯入區，樣式統一</td><td>視覺一致、功能歸位</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    出勤資料頁 UI/UX 改良提案 · 互動原型：<a href="mockup/E080-redesign.html" style="color:#7fb6d9;">mockup/E080-redesign.html</a>
+  </div>
+</footer>
+
+<!-- ===================== 點圖放大：新舊並排 lightbox ===================== -->
+<div id="lightbox" hidden>
+  <div class="lb-head">
+    <div class="lb-title">新舊版並排對照</div>
+    <div class="lb-mode" id="lbMode">
+      <button type="button" data-m="fit" class="on">適應視窗</button>
+      <button type="button" data-m="wide">佔滿全版</button>
+      <button type="button" data-m="full">原圖大小 1:1</button>
+    </div>
+    <button type="button" class="lb-close" id="lbClose">✕ 關閉</button>
+  </div>
+  <div class="lb-grid mode-fit" id="lbGrid"></div>
+  <div class="lb-tip">「佔滿全版」整體上下捲動；「原圖大小」左右兩張各自捲動。按 Esc、點「關閉」或點灰底處皆可關閉</div>
+</div>
+
+<script>
+(function () {
+  var lb = document.getElementById('lightbox');
+  var grid = document.getElementById('lbGrid');
+
+  function openPair(pair) {
+    grid.innerHTML = '';
+    pair.querySelectorAll('.shot').forEach(function (s) {
+      var fig = document.createElement('figure');
+      var cap = document.createElement('figcaption');
+      cap.innerHTML = s.querySelector('h4').innerHTML;
+      var pane = document.createElement('div');
+      pane.className = 'lb-pane';
+      var img = document.createElement('img');
+      img.src = s.querySelector('img').src;
+      img.alt = s.querySelector('img').alt;
+      pane.appendChild(img);
+      fig.appendChild(cap);
+      fig.appendChild(pane);
+      grid.appendChild(fig);
+    });
+    lb.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+  function close() {
+    lb.hidden = true;
+    document.body.style.overflow = '';
+  }
+  function setMode(m) {
+    grid.className = 'lb-grid mode-' + m;
+    document.querySelectorAll('#lbMode button').forEach(function (b) {
+      b.classList.toggle('on', b.getAttribute('data-m') === m);
+    });
+  }
+
+  document.querySelectorAll('.shot-pair').forEach(function (pair) {
+    pair.querySelectorAll('.shot img').forEach(function (img) {
+      img.addEventListener('click', function () { openPair(pair); });
+    });
+  });
+  document.querySelectorAll('#lbMode button').forEach(function (b) {
+    b.addEventListener('click', function () { setMode(b.getAttribute('data-m')); });
+  });
+  document.getElementById('lbClose').addEventListener('click', close);
+  lb.addEventListener('click', function (e) { if (e.target === lb || e.target === grid) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !lb.hidden) close(); });
+})();
+
+// 目錄：捲動高亮目前段落；跳到附錄時自動展開
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('#toc a'));
+  var sections = links.map(function (a) {
+    return document.querySelector(a.getAttribute('href'));
+  });
+
+  var appendixLink = document.querySelector('#toc a[href="#appendix"]');
+  if (appendixLink) {
+    appendixLink.addEventListener('click', function () {
+      var d = document.querySelector('details.appx');
+      if (d) d.open = true;
+    });
+  }
+
+  function highlight() {
+    var pos = window.scrollY + 120;   // 吸頂列高度的緩衝
+    var current = 0;
+    sections.forEach(function (sec, i) {
+      if (sec && sec.offsetTop <= pos) current = i;
+    });
+    // 捲到頁尾時，最後一項恆為目前段落
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 4) {
+      current = links.length - 1;
+    }
+    links.forEach(function (a, i) { a.classList.toggle('on', i === current); });
+  }
+
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(function () { highlight(); ticking = false; });
+  });
+  highlight();
+})();
+</script>
+
+</body>
+</html>
