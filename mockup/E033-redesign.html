@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1" name="viewport">
+<title>工作時間設定 E033 · UI/UX 重新規劃原型</title>
+
+<!-- 直接引用專案本身的 AdminLTE 2 / Bootstrap 3.3.7 資產 -->
+<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
+<link rel="stylesheet" href="dist/css/AdminLTE.min.css">
+<link rel="stylesheet" href="dist/css/skins/_all-skins.min.css">
+<link rel="stylesheet" href="plugins/datepicker/datepicker3.css">
+<link rel="stylesheet" href="css/E01_Style.css">
+
+<style>
+  /* ===== 原型專用微調；正式導入時集中放 E033 的 style 區塊 ===== */
+  body { font-family: "Microsoft JhengHei", "Source Sans Pro", sans-serif; }
+
+  .e033-layout { padding: 10px 15px 0; }
+  /* 內容區用頁面灰底，白色只留給實際承載資料的 box，避免整片死白 */
+  .e033-layout { background: transparent; }
+  .data-box { background: #fff; border: 1px solid #dfe3e8; border-radius: 3px; }
+  .data-box > .data-box-tools { padding: 8px 10px; border-bottom: 1px solid #eceff2; background: #f8f9fa; }
+  .data-box > .data-box-foot { padding: 7px 10px; border-top: 1px solid #eceff2;
+    background: #f8f9fa; color: #888; }
+  .content-wrapper { background: #eef1f5; }
+
+  /* --- 表格：字級一律 14px（Bootstrap body 基準），只收緊 padding --- */
+  .table > thead > tr > th { background: #f9fafb; color: #777;
+    white-space: nowrap; border-bottom: 2px solid #e3e6e8; padding: 7px 8px; }
+  .table > tbody > tr > td { vertical-align: middle; padding: 6px 8px; }
+  .table-scroll { max-height: 66vh; min-height: 240px; overflow: auto; }
+  .table-scroll > .table > thead > tr > th { position: sticky; top: 0; z-index: 2; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .nowrap { white-space: nowrap; }
+  .col-act { width: 132px; }
+  .col-name { width: 190px; }
+  .col-seg { min-width: 300px; }
+
+  .act-cell { padding: 4px 6px !important; white-space: nowrap; }
+  .act-btn { padding: 2px 6px; margin-right: 2px; }
+  .act-btn:last-child { margin-right: 0; }
+  .act-btn > i { font-size: 15px; }
+
+  .row-hidden > td:not(.act-cell) { opacity: .55; }
+
+  /* --- 時間軸 --- */
+  .tl { position: relative; background: #eef1f5; border: 1px solid #e0e4e9;
+        border-radius: 2px; overflow: hidden; }
+  .tl-mini { height: 12px; margin-bottom: 3px; }
+  .tl-big  { height: 30px; }
+  .tl-bar { position: absolute; top: 0; bottom: 0; }
+  .tl-work { background: #3c8dbc; }
+  .tl-work.tl-s2 { background: #00a65a; }
+  .tl-work.tl-s3 { background: #f39c12; }
+  .tl-rest { background: repeating-linear-gradient(45deg, #ffffff, #ffffff 4px, #d8dee5 4px, #d8dee5 8px);
+             border-left: 1px solid #c3ccd6; border-right: 1px solid #c3ccd6; }
+  .tl-rest-keep { background: repeating-linear-gradient(45deg, #cfe8f5, #cfe8f5 4px, #a9d3e8 4px, #a9d3e8 8px); }
+  .tl-tick { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(0,0,0,.10); }
+  .tl-24 { position: absolute; top: 0; bottom: 0; width: 2px; background: #dd4b39; }
+  .tl-axis { position: relative; height: 16px; color: #999; }
+  .tl-axis > span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+  .tl-legend > span { margin-right: 14px; color: #777; }
+  .tl-legend i.sw { display: inline-block; width: 12px; height: 12px; vertical-align: -1px;
+    margin-right: 4px; border: 1px solid #cfd6dd; }
+  .seg-text { color: #666; }
+  .seg-text b { color: #333; font-weight: 600; }
+
+  /* --- 問號說明 --- */
+  .help-i { display: inline-block; width: 17px; height: 17px; line-height: 15px; text-align: center;
+    border: 1px solid #b9c2cb; border-radius: 50%; color: #7b8794; background: #fff;
+    font-size: 12px; margin-left: 5px; cursor: pointer; vertical-align: 1px; }
+  .help-i:hover, .help-i:focus { background: #3c8dbc; border-color: #3c8dbc; color: #fff;
+    text-decoration: none; outline: none; }
+  .popover { max-width: 340px; }
+  .popover-content { padding: 9px 12px; color: #444; }
+  .popover-content code { font-size: 13px; }
+
+  /* --- 編輯彈窗 --- */
+  .modal-dialog.modal-wide { width: 92%; max-width: 1100px; }
+  .modal-wide .modal-body { padding: 14px; background: #eef1f5;
+    max-height: 64vh; overflow-y: auto; }
+  .modal-foot-calc { background: #f8f9fa; }
+
+  /* 群組分段：每個設定群組一張白卡，標題列吸頂 */
+  .sec { background: #fff; border: 1px solid #dfe3e8; border-radius: 3px; margin-bottom: 12px; }
+  .sec > .sec-head { padding: 9px 12px; background: #f8f9fa; border-bottom: 1px solid #eceff2;
+    position: sticky; top: -14px; z-index: 3; border-radius: 3px 3px 0 0; }
+  .sec > .sec-head > .sec-name { font-size: 15px; font-weight: 600; color: #3c8dbc; }
+  .sec > .sec-head > .sec-hint { color: #999; margin-left: 8px; }
+  .sec > .sec-body { padding: 12px; }
+  .sec:last-child { margin-bottom: 0; }
+  .calc-big { font-size: 18px; font-weight: 600; color: #3c8dbc;
+    font-variant-numeric: tabular-nums; }
+
+  /* 時 : 分 組合輸入 */
+  .hm { display: inline-flex; align-items: center; }
+  .hm select { width: 68px; }
+  .hm .hm-sep { padding: 0 5px; color: #999; font-weight: 600; }
+  .fld { margin-bottom: 10px; }
+  .fld > label { display: block; margin-bottom: 4px; }
+  .seg-card { background: #fff; border: 1px solid #dfe3e8; border-radius: 3px; margin-bottom: 12px; }
+  .seg-card > .seg-head { padding: 8px 12px; border-bottom: 1px solid #eceff2; background: #f8f9fa; }
+  .seg-card > .seg-head .seg-title { font-weight: 600; }
+  .seg-card > .seg-body { padding: 12px; }
+  .seg-off > .seg-head { background: #f2f4f6; color: #999; }
+  .seg-off > .seg-head .seg-title { color: #999; }
+  .ot-grp { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .ot-grp > .grp-no { width: 56px; color: #777; }
+
+  /* 原型專用開關：用虛線框標示「這不是產品的一部分」 */
+  .proto-switch { display: inline-block; border: 1px dashed #d0a94a; background: #fdf9ee;
+    padding: 5px 10px; border-radius: 3px; color: #8a6d3b; }
+  .proto-switch label { margin: 0; font-weight: 400; }
+  .proto-note { background: #fcf8e3; border: 1px solid #f0e2ab; color: #8a6d3b;
+    padding: 7px 34px 7px 12px; margin: 10px 15px 0; position: relative; }
+  .proto-note > .close { position: absolute; top: 6px; right: 10px; color: #8a6d3b; }
+
+  /* --- 舊版佈局重現（僅供新舊對照展示，樣式仿現行 E033.aspx） --- */
+  body.ui-old #contextBar,
+  body.ui-old .e033-layout { display: none; }
+  #oldLayout { display: none; padding: 10px 15px; }
+  body.ui-old #oldLayout { display: block; }
+  #oldLayout .old-area { font-size: 13px; }
+  #oldLayout .old-area label { font-weight: 400; margin: 0; }
+  #oldLayout .old-btn { background: #e9e9e9; border: 1px solid #a5a5a5; border-radius: 0;
+    padding: 2px 8px; margin: 2px 2px 2px 0; font-size: 13px; color: #222; }
+  #oldLayout .old-btn:hover { background: #dcdcdc; }
+  #oldLayout .old-input { border: 1px solid #a9a9a9; padding: 1px 4px; width: 140px;
+    font-size: 13px; background: #fff; }
+  #oldLayout select.old-input { width: auto; }
+  /* 原頁的 asp:Panel：綠框 + 550px 高 + 僅水平捲軸 */
+  #oldLayout .old-panel-green { border: 1px solid #009933; background: #fff;
+    height: 550px; overflow: auto; }
+  #oldLayout .old-grid { width: 100%; border-collapse: collapse; background: #fff; }
+  #oldLayout .old-grid th, #oldLayout .old-grid td { border: 1px solid #ddd;
+    padding: 4px 6px; white-space: nowrap; text-align: left; }
+  #oldLayout .old-grid th { background: #f5f5f5; font-weight: 700; }
+  #oldLayout .old-grid td.c { text-align: center; width: 100px; }
+  #oldLayout .old-grid a { color: #337ab7; text-decoration: underline; cursor: pointer; }
+  #oldLayout .search_bar { display: flex; column-gap: 8px; align-items: center; padding: 10px 0; }
+  /* 原頁的 pnlpopup：absolute + 900×800 + 可拖曳 */
+  #oldPopup { display: none; position: absolute; left: 30%; top: 8%; z-index: 111;
+    background: #fff; border: outset 2px gray; padding: 5px;
+    width: 900px; height: 800px; flex-direction: column; }
+  #oldPopup .pop-scroll { flex: 1; overflow-y: auto; }
+  #oldPopup .kf-box { padding: 4px 6px; font-size: 13px; }
+  #oldPopup .kf-box label { font-weight: 400; margin: 0; }
+  #oldPopup .pop-drag { cursor: move; background: #f0f0f0; border-bottom: 1px solid #ccc;
+    padding: 3px 6px; font-size: 13px; color: #555; }
+  #oldBackFab { display: none; position: fixed; right: 20px; bottom: 20px; z-index: 1050;
+    box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+  body.ui-old.old-note-off #oldBackFab { display: block; }
+</style>
+</head>
+
+<body class="hold-transition skin-blue sidebar-mini">
+<div class="wrapper">
+<div class="fixed">
+
+  <!-- ===================== Header：沿用 E01.Master 結構 ===================== -->
+  <header class="main-header">
+
+    <span class="logo"><b>金豐雲端管理系統</b></span>
+
+    <nav class="navbar navbar-fixed-top">
+      <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
+        <span class="sr-only">Toggle navigation</span>
+      </a>
+      <ul class="nav navbar-nav">
+        <li><a href="#"><span>首頁</span></a></li>
+        <li class="bg-blue-active"><a href="#"><span>企業管理專區</span></a></li>
+        <li><a href="#"><span>企業員工專區</span></a></li>
+        <li><a href="#"><span>影音教學</span></a></li>
+        <li><a href="#"><span>金豐公告</span></a></li>
+      </ul>
+      <div class="navbar-custom-menu">
+        <ul class="nav navbar-nav">
+          <li class="dropdown tasks-menu">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-flag-o"></i></a>
+            <ul class="dropdown-menu"><li class="header">無新訊息</li></ul>
+          </li>
+          <li><u><strong class="navbar-text pull-right">金豐範例公司</strong></u></li>
+          <li><u><strong class="navbar-text pull-right">王管理員</strong></u></li>
+          <li><a href="#"><span>密碼更改</span></a></li>
+          <li><a href="#"><span>登出</span></a></li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ===================== 左方子功能表：沿用 E01.Master 結構 ===================== -->
+  <aside class="main-sidebar" style="max-height: 900px; overflow-y: auto;">
+    <section class="sidebar">
+      <ul class="sidebar-menu">
+
+        <li class="treeview active menu-open">
+          <a href="#"><i class="fa fa-dashboard"></i><span>公司資料設定</span>
+            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+          <ul class="treeview-menu" style="display:block">
+            <li class="treeview"><a href="#"><i class="fa fa-dashboard"></i><span>公司基本資料</span>
+              <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+              <ul class="treeview-menu">
+                <li><a href="#"><i class="fa fa-circle-o"></i>公司基本資料設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>部門設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>職稱設定</a></li>
+              </ul>
+            </li>
+            <li class="treeview"><a href="#"><i class="fa fa-dashboard"></i><span>公司薪資資料</span>
+              <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+              <ul class="treeview-menu">
+                <li><a href="#"><i class="fa fa-circle-o"></i>薪資科目總表設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>公司薪資科目設定</a></li>
+              </ul>
+            </li>
+            <li class="treeview active menu-open"><a href="#"><i class="fa fa-dashboard"></i><span>公司出勤資料</span>
+              <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+              <ul class="treeview-menu" style="display:block">
+                <li><a href="#"><i class="fa fa-circle-o"></i>出勤項目設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>計日時出勤項目參數設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>加班項目參數設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>缺勤項目參數設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>遲到早退設定</a></li>
+                <li class="active"><a href="#"><i class="fa fa-circle-o"></i>工作時間設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>全年度行事曆參數設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>全年度行事曆設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>出勤狀態設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>全勤條件設定</a></li>
+                <li><a href="#"><i class="fa fa-circle-o"></i>員工班表管理權限設定</a></li>
+              </ul>
+            </li>
+            <li class="treeview"><a href="#"><i class="fa fa-dashboard"></i><span>公司考核設定</span>
+              <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+              <ul class="treeview-menu"><li><a href="#"><i class="fa fa-circle-o"></i>考核參數設定</a></li></ul>
+            </li>
+            <li class="treeview"><a href="#"><i class="fa fa-dashboard"></i><span>公司其他設定</span>
+              <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+              <ul class="treeview-menu"><li><a href="#"><i class="fa fa-circle-o"></i>公司資料維護</a></li></ul>
+            </li>
+          </ul>
+        </li>
+
+        <li class="treeview">
+          <a href="#"><i class="fa fa-dashboard"></i><span>員工資料設定</span>
+            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+          <ul class="treeview-menu">
+            <li><a href="#"><i class="fa fa-book"></i><span>人事資料</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>員工班表</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>出勤資料</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>加班補休明細</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>特休遞延明細</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>考核資料</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>薪資發放</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>排班 1.5</span></a></li>
+          </ul>
+        </li>
+
+        <li class="treeview">
+          <a href="#"><i class="fa fa-dashboard"></i><span>報表列印</span>
+            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+          <ul class="treeview-menu">
+            <li><a href="#"><i class="fa fa-book"></i><span>人事報表</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>薪資報表</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>考核報表</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>出勤報表</span></a></li>
+          </ul>
+        </li>
+
+        <li class="treeview">
+          <a href="#"><i class="fa fa-dashboard"></i><span>客戶服務</span>
+            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+          <ul class="treeview-menu">
+            <li><a href="#"><i class="fa fa-book"></i><span>顧問文件上傳/下載</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>顧問問題諮詢</span></a></li>
+            <li><a href="#"><i class="fa fa-book"></i><span>金豐訊息通知</span></a></li>
+          </ul>
+        </li>
+
+        <li class="treeview">
+          <a href="#"><i class="fa fa-dashboard"></i><span>企業員工專區管理</span>
+            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span></a>
+          <ul class="treeview-menu">
+            <li><a href="#"><i class="fa fa-book"></i><span>申請紀錄新增</span></a></li>
+          </ul>
+        </li>
+
+      </ul>
+    </section>
+  </aside>
+
+  <div class="content-wrapper">
+    <div class="proto-note" id="protoNote">
+      <i class="fa fa-info-circle"></i> 靜態 UI/UX 原型 — 框架與樣式沿用專案本身的 E01.Master / AdminLTE 2 skin-blue；資料為假資料，僅前端互動。
+      欄位旁的 <span class="help-i">?</span> 可點開說明。
+      <button type="button" class="close" aria-label="Close" onclick="$('#protoNote').fadeOut(50)">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+
+    <!-- ===================== 頁面級 Context Bar ===================== -->
+    <div id="contextBar" style="padding:10px 15px 0">
+      <div class="box box-primary" style="margin-bottom:0">
+        <div class="box-body">
+          <form class="form-inline" style="display:inline-block" onsubmit="return false">
+            <label style="margin-right:6px"><i class="fa fa-clock-o fa-fw"></i> 名稱</label>
+            <input type="text" class="form-control" id="kw" placeholder="工作時間名稱…" style="width:200px">
+            <span style="margin:0 4px 0 14px">狀態</span>
+            <label class="radio-inline"><input type="radio" name="st" value="ALL" checked> 全部</label>
+            <label class="radio-inline"><input type="radio" name="st" value="0"> 啟用</label>
+            <label class="radio-inline"><input type="radio" name="st" value="1"> 隱藏</label>
+            <button type="button" class="btn btn-primary" style="margin-left:8px" onclick="renderList()">
+              <i class="fa fa-search"></i> 搜尋</button>
+          </form>
+
+          <div class="pull-right">
+            <span class="proto-switch" data-toggle="tooltip" data-container="body"
+              title="原型專用：對應公司參數 C企業客戶.是否加班自動分段，用來展示加班休息時間的兩種設定介面">
+              <label><input type="checkbox" id="optAutoBreak" onchange="applyAutoBreak()">
+                模擬公司參數：加班自動分段</label>
+            </span>
+            <button type="button" class="btn btn-default" style="margin-left:8px" onclick="toggleOldUI()"
+              data-toggle="tooltip" data-container="body" title="切換為現行 E033 的版面重現，方便新舊對照">
+              <i class="fa fa-history"></i> 切換舊版佈局</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== 主版面 ===================== -->
+    <div class="e033-layout">
+      <div class="data-box">
+
+        <div class="data-box-tools btn-toolbar" style="margin:0">
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="openEdit(-1)">
+              <i class="fa fa-plus fa-fw"></i> 新增工作時間</button>
+          </div>
+          <div class="btn-group pull-right">
+            <button class="btn btn-danger" data-toggle="modal" data-target="#mReset">
+              <i class="fa fa-refresh fa-fw"></i> 從母庫重置</button>
+            <a tabindex="0" class="help-i" data-toggle="popover" data-container="body" data-trigger="focus"
+              data-placement="left" data-html="true" data-title="從母庫重置（原「複製總設定」）"
+              data-content="會<b>清空本公司目前所有工作時間設定</b>，再從金豐母庫的範本整批複製回來，無法復原。<br>只要有任何一筆正被員工或班表使用，系統就會擋下整個動作。">?</a>
+          </div>
+        </div>
+
+        <div class="table-scroll">
+          <table class="table table-striped table-bordered table-hover" style="margin:0">
+            <thead>
+              <tr>
+                <th class="col-act">操作</th>
+                <th class="col-name">名稱</th>
+                <th class="col-seg">時段
+                  <a tabindex="0" class="help-i" data-toggle="popover" data-container="body" data-trigger="focus"
+                    data-placement="bottom" data-html="true" data-title="時段"
+                    data-content="橫條是一天的時間軸。<b>藍/綠/橘</b> 依序代表第一、二、三段工作時間，<b>斜線區塊</b> 是休息時間；有跨夜的班別會延伸到 24 點以後，紅線標示日界。">?</a>
+                </th>
+                <th class="nowrap">排序
+                  <a tabindex="0" class="help-i" data-toggle="popover" data-container="body" data-trigger="focus"
+                    data-placement="bottom" data-html="true" data-title="排序"
+                    data-content="決定本頁清單、以及員工班表／人事資料裡「工作時間」下拉選單的排列順序，數字小的在前。">?</a>
+                </th>
+                <th class="nowrap">狀態</th>
+              </tr>
+            </thead>
+            <tbody id="listBody"></tbody>
+          </table>
+        </div>
+
+        <div class="data-box-foot">
+          <span class="pull-right tl-legend">
+            <span><i class="sw" style="background:#3c8dbc"></i>第一段</span>
+            <span><i class="sw" style="background:#00a65a"></i>第二段</span>
+            <span><i class="sw" style="background:#f39c12"></i>第三段</span>
+            <span><i class="sw tl-rest"></i>休息(扣除)</span>
+            <span><i class="sw tl-rest tl-rest-keep"></i>休息(不扣除)</span>
+          </span>
+          共 <span id="listCount">0</span> 筆 · 點「<i class="fa fa-pencil"></i>」開啟設定
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== 舊版佈局重現（僅供對照） ===================== -->
+    <div id="oldLayout">
+      <div class="callout callout-warning" id="oldNotice">
+        <h4>現行 E033 版面重現</h4>
+        <p>以下為現行 <code>E033.aspx</code> 的版面重現，僅供新舊對照：清單只有 名稱／排序／隱藏 三欄，
+          要看內容必須逐筆按「選取」開啟 900×800 的拖曳面板。
+          <button class="btn btn-primary" onclick="toggleOldUI()"><i class="fa fa-arrow-left fa-fw"></i> 回新版</button>
+          <button class="btn btn-default" onclick="hideOldNotice()">關閉此說明</button>
+        </p>
+      </div>
+
+      <div class="old-area">
+        <div class="search_bar">
+          <label>名稱: </label>
+          <input class="old-input" type="text">
+          <label><input type="radio" name="oldst" checked> 全部</label>
+          <label><input type="radio" name="oldst"> 啟用</label>
+          <label><input type="radio" name="oldst"> 隱藏</label>
+          <button class="old-btn">搜尋</button>
+        </div>
+
+        <div class="old-panel-green">
+          <table class="old-grid">
+            <thead>
+              <tr><th style="width:120px">&nbsp;</th><th>名稱</th><th class="c">排序</th><th class="c">隱藏</th></tr>
+            </thead>
+            <tbody id="oldBody"></tbody>
+          </table>
+        </div>
+
+        <div style="padding:10px 0">
+          <button class="old-btn">新增</button>
+          <button class="old-btn">複製總設定</button>
+        </div>
+      </div>
+
+      <!-- 原頁 pnlpopup：absolute 定位、固定 900×800、DragPanelExtender 可拖曳、無遮罩 -->
+      <div id="oldPopup">
+        <div class="pop-drag"><i class="fa fa-arrows"></i> （此面板可用滑鼠拖曳，非 Modal，沒有背景遮罩）
+          <a href="javascript:;" class="pull-right" onclick="$('#oldPopup').hide()">關閉</a></div>
+        <div class="pop-scroll" id="oldPopBody"></div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="oldBackFab" onclick="toggleOldUI()">
+      <i class="fa fa-arrow-left fa-fw"></i> 回新版</button>
+
+  </div><!-- /content-wrapper -->
+
+  <footer class="main-footer">
+    <div class="pull-right hidden-xs"><b>E033</b> 工作時間設定 · UI/UX 原型</div>
+    <strong>金豐雲端管理系統</strong>
+  </footer>
+
+</div><!-- /fixed -->
+</div><!-- /wrapper -->
+
+
+<!-- ===================== 編輯 / 新增 彈窗 ===================== -->
+<div class="modal fade" id="mEdit"><div class="modal-dialog modal-wide">
+  <div class="modal-content">
+    <div class="modal-header">
+      <button class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title"><i class="fa fa-clock-o fa-fw"></i> <span id="edTitle">編輯工作時間</span>
+        <small id="edUseNote" class="text-muted"></small></h4>
+    </div>
+
+    <div class="modal-body" id="edScroll">
+
+          <!-- ========== 基本 ========== -->
+          <div class="sec" id="secBase">
+            <div class="sec-head"><span class="sec-name"><i class="fa fa-info-circle fa-fw"></i> 基本設定</span>
+              <span class="sec-hint">名稱、排序、每日／每周應出勤時數</span></div>
+            <div class="sec-body">
+              <div class="row">
+                <div class="col-md-5"><div class="fld">
+                  <label>名稱 <span class="text-red">*</span>
+                    <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="right"
+                      data-html="true" data-title="名稱"
+                      data-content="這個名稱就是<b>員工班表與人事資料裡實際存的值</b>（不是 id）。改名等於改掉所有引用它的班表對應，已在使用中的工作時間請避免改名。">?</a>
+                  </label>
+                  <input class="form-control" id="edName"></div></div>
+                <div class="col-md-3"><div class="fld">
+                  <label>排序
+                    <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="right"
+                      data-html="true" data-title="排序"
+                      data-content="數字小的排前面。影響本頁清單與各處「工作時間」下拉選單的順序。">?</a>
+                  </label>
+                  <input class="form-control num" id="edSort"></div></div>
+                <div class="col-md-4"><div class="fld">
+                  <label>狀態
+                    <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="left"
+                      data-html="true" data-title="隱藏"
+                      data-content="勾選後這筆<b>不再出現在新的班表／人事資料選單</b>，但已經套用它的舊資料與歷史出勤<b>不受影響</b>，計算方式照舊。<br>用於淘汰班別時取代刪除。">?</a>
+                  </label>
+                  <div class="checkbox" style="margin:0">
+                    <label><input type="checkbox" id="edHidden"> 隱藏（停用）</label></div>
+                </div></div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-5"><div class="fld">
+                  <label>打卡模式
+                    <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="right"
+                      data-html="true" data-title="打卡模式"
+                      data-content="目前系統只開放「<b>正常打卡</b>」：依下方設定的固定上下班時間判定。<br>原本的「彈性打卡」「自由打卡」在程式中已被停用，因此連帶的彈性提前／延後分鐘設定也不會出現。">?</a>
+                  </label>
+                  <select class="form-control" id="edMode">
+                    <option value="1">正常打卡</option>
+                    <option value="2" disabled>彈性打卡（已停用）</option>
+                    <option value="3" disabled>自由打卡（已停用）</option>
+                  </select></div></div>
+                <div class="col-md-3"><div class="fld">
+                  <label>每日工時 <span class="text-red">*</span>
+                    <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="right"
+                      data-html="true" data-title="每日 / 每周工時"
+                      data-content="這是<b>制度上的應出勤時數</b>，供「工作時間檢查」比對下方時段加總是否合理，並作為請假、加班換算的基準。<br>不是由時段自動算出來的，兩者不一致時檢查會提醒。">?</a>
+                  </label>
+                  <div class="input-group">
+                    <input class="form-control num" id="edDayH"><span class="input-group-addon">小時</span></div>
+                </div></div>
+                <div class="col-md-3"><div class="fld">
+                  <label>每周工時</label>
+                  <div class="input-group">
+                    <input class="form-control num" id="edWeekH"><span class="input-group-addon">小時</span></div>
+                </div></div>
+              </div>
+
+              <div class="checkbox" style="margin-bottom:0">
+                <label><input type="checkbox" id="edWithRate"> 工作津貼依照出勤比例發放</label>
+                <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="right"
+                  data-html="true" data-title="工作津貼依照出勤比例發放"
+                  data-content="勾選後，套用此工作時間的員工，其<b>工作津貼會按當月實際出勤比例折算</b>，而不是固定全額發放。未勾選則全額發放。">?</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========== 工作時段 ========== -->
+          <div class="sec" id="secSeg">
+            <div class="sec-head"><span class="sec-name"><i class="fa fa-clock-o fa-fw"></i> 工作時段</span>
+              <span class="sec-hint">上下班與休息時間，最多三段
+                <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="right"
+                  data-html="true" data-title="時段預覽"
+                  data-content="下方橫條即時反映三段設定。<b>藍/綠/橘</b> 為第一、二、三段工作時間，<b>斜線</b> 為休息；有跨夜時軸會延伸為 48 小時，<b>紅線</b> 是日界（24:00）。">?</a>
+              </span></div>
+            <div class="sec-body">
+              <div style="margin-bottom:14px">
+                <div class="tl tl-big" id="edTl"></div>
+                <div class="tl-axis" id="edTlAxis"></div>
+              </div>
+
+            <!-- 第一段 -->
+            <div class="seg-card" id="segCard1">
+              <div class="seg-head"><span class="seg-title"><i class="fa fa-circle text-blue"></i> 第一段工作時間</span>
+                <span class="text-muted">（必填）</span></div>
+              <div class="seg-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="fld"><label>上班 ~ 下班</label>
+                      <div class="hm"><select class="form-control h" id="s1sh"></select><span class="hm-sep">:</span>
+                        <select class="form-control m" id="s1sm"></select>
+                        <span class="hm-sep">~</span>
+                        <select class="form-control h" id="s1eh"></select><span class="hm-sep">:</span>
+                        <select class="form-control m" id="s1em"></select></div>
+                    </div>
+                    <div class="checkbox" style="margin:0">
+                      <label><input type="checkbox" id="s1night"> 第一段跨夜</label>
+                      <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="right"
+                        data-html="true" data-title="跨夜"
+                        data-content="下班時間落在<b>隔天</b>時必須勾選，例如 22:00 上班、06:00 下班。<br>沒勾選的話系統會把 06:00 當成同一天，工時會算成負數或異常。">?</a>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="fld"><label>休息開始 ~ 結束</label>
+                      <div class="hm"><select class="form-control h" id="r1sh"></select><span class="hm-sep">:</span>
+                        <select class="form-control m" id="r1sm"></select>
+                        <span class="hm-sep">~</span>
+                        <select class="form-control h" id="r1eh"></select><span class="hm-sep">:</span>
+                        <select class="form-control m" id="r1em"></select></div>
+                    </div>
+                    <div class="checkbox" style="margin:0">
+                      <label><input type="checkbox" id="d1"> 扣除休息時間</label>
+                      <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="left"
+                        data-html="true" data-title="扣除休息時間"
+                        data-content="勾選：這段休息<b>不計入工作時間</b>（08:00–17:00 休 1 小時 → 工時 8 小時）。<br>不勾：休息時間<b>照樣算工時</b>，常見於待命性質的班別。">?</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 第二段 -->
+            <div class="seg-card seg-off" id="segCard2">
+              <div class="seg-head">
+                <label style="margin:0;font-weight:600">
+                  <input type="checkbox" id="segOn2"> <i class="fa fa-circle text-green"></i>
+                  <span class="seg-title">啟用第二段工作時間</span></label>
+                <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="right"
+                  data-html="true" data-title="二段 / 三段工時"
+                  data-content="一天之中<b>分成多次上下班</b>時使用（中間需重新打卡），例如餐飲業 10:00–14:00、17:00–21:00。<br>只是中午休息不用開第二段 — 那用第一段的「休息時間」就好。">?</a>
+              </div>
+              <div class="seg-body" style="display:none">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="fld"><label>上班 ~ 下班</label>
+                      <div class="hm"><select class="form-control h" id="s2sh"></select><span class="hm-sep">:</span>
+                        <select class="form-control m" id="s2sm"></select>
+                        <span class="hm-sep">~</span>
+                        <select class="form-control h" id="s2eh"></select><span class="hm-sep">:</span>
+                        <select class="form-control m" id="s2em"></select></div>
+                    </div>
+                    <div class="checkbox" style="margin:0">
+                      <label><input type="checkbox" id="s2night"> 第二段跨夜</label></div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="fld"><label>休息開始 ~ 結束</label>
+                      <div class="hm"><select class="form-control h" id="r2sh"></select><span class="hm-sep">:</span>
+                        <select class="form-control m" id="r2sm"></select>
+                        <span class="hm-sep">~</span>
+                        <select class="form-control h" id="r2eh"></select><span class="hm-sep">:</span>
+                        <select class="form-control m" id="r2em"></select></div>
+                    </div>
+                    <div class="checkbox" style="margin:0">
+                      <label><input type="checkbox" id="d2"> 扣除休息時間</label></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 第三段 -->
+            <div class="seg-card seg-off" id="segCard3">
+              <div class="seg-head">
+                <label style="margin:0;font-weight:600">
+                  <input type="checkbox" id="segOn3"> <i class="fa fa-circle text-yellow"></i>
+                  <span class="seg-title">啟用第三段工作時間</span></label>
+              </div>
+              <div class="seg-body" style="display:none">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="fld"><label>上班 ~ 下班</label>
+                      <div class="hm"><select class="form-control h" id="s3sh"></select><span class="hm-sep">:</span>
+                        <select class="form-control m" id="s3sm"></select>
+                        <span class="hm-sep">~</span>
+                        <select class="form-control h" id="s3eh"></select><span class="hm-sep">:</span>
+                        <select class="form-control m" id="s3em"></select></div>
+                    </div>
+                    <div class="checkbox" style="margin:0">
+                      <label><input type="checkbox" id="s3night"> 第三段跨夜</label></div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="fld"><label>休息開始 ~ 結束</label>
+                      <div class="hm"><select class="form-control h" id="r3sh"></select><span class="hm-sep">:</span>
+                        <select class="form-control m" id="r3sm"></select>
+                        <span class="hm-sep">~</span>
+                        <select class="form-control h" id="r3eh"></select><span class="hm-sep">:</span>
+                        <select class="form-control m" id="r3em"></select></div>
+                    </div>
+                    <div class="checkbox" style="margin:0">
+                      <label><input type="checkbox" id="d3"> 扣除休息時間</label></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div>
+          </div>
+
+          <!-- ========== 打卡限制 ========== -->
+          <div class="sec" id="secPunch">
+            <div class="sec-head"><span class="sec-name"><i class="fa fa-hand-o-up fa-fw"></i> 打卡限制</span>
+              <span class="sec-hint">三個欄位皆填 0 代表不限制</span></div>
+            <div class="sec-body">
+
+              <div class="fld">
+                <label>上班前可打卡時間
+                  <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="right"
+                    data-html="true" data-title="上班前 N 分鐘內可打卡"
+                    data-content="太早到的打卡會被擋下。例如設 30、上班 08:00，則 07:30 之後才收得到上班卡。<br>填 <b>0 為不限制</b>，多早打都收。">?</a>
+                </label>
+                <div class="hm">
+                  <span style="margin-right:6px">上班前</span>
+                  <div class="input-group" style="width:150px">
+                    <input class="form-control num" id="edBefore" value="0">
+                    <span class="input-group-addon">分鐘內</span></div>
+                  <span style="margin-left:6px">可打卡</span>
+                </div>
+              </div>
+
+              <div class="fld">
+                <label>下班後打卡處理
+                  <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="right"
+                    data-html="true" data-title="下班後 N 分鐘內正常打卡"
+                    data-content="下班後這段時間內打卡<b>照實際時間記錄</b>；超過的話，系統會在設定時間內<b>隨機取一個時間</b>當作下班卡，避免留下大量疑似加班的紀錄。<br>填 <b>0 為不限制</b>。">?</a>
+                </label>
+                <div class="hm">
+                  <span style="margin-right:6px">下班後</span>
+                  <div class="input-group" style="width:150px">
+                    <input class="form-control num" id="edAfter" value="0">
+                    <span class="input-group-addon">分鐘內</span></div>
+                  <span style="margin-left:6px">正常打卡，超過則於設定時間內隨機打卡</span>
+                </div>
+              </div>
+
+              <div class="fld" style="margin-bottom:0">
+                <label>加班申請結束後打卡處理
+                  <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="right"
+                    data-html="true" data-title="加班申請結束後 N 分鐘"
+                    data-content="規則同上，但比對的基準是<b>加班單上的結束時間</b>，而不是正常下班時間。<br>填 <b>0 為不限制</b>。">?</a>
+                </label>
+                <div class="hm">
+                  <span style="margin-right:6px">加班申請結束後</span>
+                  <div class="input-group" style="width:150px">
+                    <input class="form-control num" id="edOTAfter" value="0">
+                    <span class="input-group-addon">分鐘內</span></div>
+                  <span style="margin-left:6px">正常打卡，超過則於設定時間內隨機打卡</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========== 加班 ========== -->
+          <div class="sec" id="secOT">
+            <div class="sec-head"><span class="sec-name"><i class="fa fa-plus-square-o fa-fw"></i> 加班</span>
+              <span class="sec-hint">加班申請的時間限制與休息扣除方式</span></div>
+            <div class="sec-body">
+              <div class="fld">
+                <label>加班開始限制
+                  <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="right"
+                    data-html="true" data-title="加班開始限制"
+                    data-content="員工申請加班時，<b>開始時間早於此時刻會被擋下</b>（申請畫面會跳訊息）。<br>留空代表不限制。">?</a>
+                </label>
+                <div class="hm"><select class="form-control h" id="otlh"></select><span class="hm-sep">:</span>
+                  <select class="form-control m" id="otlm"></select>
+                  <span style="margin-left:8px" class="text-muted">之後才可申請加班</span></div>
+              </div>
+
+              <div class="fld" id="rowBreakMethod" style="display:none">
+                <label>加班休息時間扣除方式
+                  <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="right"
+                    data-html="true" data-title="加班休息時間扣除方式"
+                    data-content="<b>依分鐘數</b>：不管幾點加班，一律扣固定分鐘數。<br><b>依起訖時間</b>：只有加班時段跨到指定的休息時段才扣，可分別設定平日與非平日。<br>此設定僅在公司啟用「加班自動分段」時才會出現。">?</a>
+                </label>
+                <select class="form-control" id="edBreakMethod" style="width:220px" onchange="applyAutoBreak()">
+                  <option value="0">依分鐘數設定</option>
+                  <option value="1">依起訖時間設定</option>
+                </select>
+              </div>
+
+              <div class="fld" id="rowBreakMinute" style="margin-bottom:0">
+                <label>加班休息時間
+                  <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="right"
+                    data-html="true" data-title="加班休息時間（分鐘）"
+                    data-content="每次加班固定扣除的休息分鐘數，<b>0 為不扣除</b>。">?</a>
+                </label>
+                <div class="input-group" style="width:150px">
+                  <input class="form-control num" id="edOTRest" value="0">
+                  <span class="input-group-addon">分</span></div>
+              </div>
+
+              <div id="boxBreakRange" style="display:none">
+                <div class="fld">
+                  <label>平日加班休息時間</label>
+                  <div id="wdBreak"></div>
+                </div>
+                <div class="fld" style="margin-bottom:0">
+                  <label>非平日加班休息時間</label>
+                  <div id="hdBreak"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========== 例休假 ========== -->
+          <div class="sec" id="secRest">
+            <div class="sec-head"><span class="sec-name"><i class="fa fa-calendar fa-fw"></i> 例休假</span>
+              <span class="sec-hint">未自訂則以「全年度行事曆設定」為主</span></div>
+            <div class="sec-body">
+              <div class="checkbox" style="margin-top:0">
+                <label><input type="checkbox" id="edCustomRest" onchange="applyCustomRest()"> 自訂例休假</label>
+                <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="right"
+                  data-html="true" data-title="自訂例休假"
+                  data-content="不勾選 → 這個班別的休息日／例假日<b>以「全年度行事曆設定」為準</b>。<br>勾選 → 改用下面指定的星期，適合輪班、周休不在六日的班別。">?</a>
+              </div>
+              <div class="row" id="rowRestDay">
+                <div class="col-md-4"><div class="fld" style="margin-bottom:0">
+                  <label>休息日
+                    <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="right"
+                      data-html="true" data-title="休息日 vs 例假日"
+                      data-content="<b>休息日</b>：經勞工同意可以出勤，出勤按休息日加班費率計。<br><b>例假日</b>：原則上不得出勤，只有天災事變等法定事由才能出勤，費率最高。">?</a>
+                  </label>
+                  <select class="form-control" id="edRestDay">
+                    <option value="0">（未指定）</option><option value="1">星期一</option><option value="2">星期二</option>
+                    <option value="3">星期三</option><option value="4">星期四</option><option value="5">星期五</option>
+                    <option value="6">星期六</option><option value="7">星期日</option>
+                  </select></div></div>
+                <div class="col-md-4"><div class="fld" style="margin-bottom:0">
+                  <label>例假日</label>
+                  <select class="form-control" id="edOffDay">
+                    <option value="0">（未指定）</option><option value="1">星期一</option><option value="2">星期二</option>
+                    <option value="3">星期三</option><option value="4">星期四</option><option value="5">星期五</option>
+                    <option value="6">星期六</option><option value="7">星期日</option>
+                  </select></div></div>
+              </div>
+            </div>
+          </div>
+
+    </div><!-- /modal-body -->
+
+    <div class="modal-footer modal-foot-calc" style="text-align:left">
+      <div id="edWarn" class="alert alert-danger" style="display:none;margin-bottom:10px"></div>
+      <div class="clearfix">
+        <div class="pull-left" style="padding-top:5px">
+          工作時間 <span class="calc-big" id="calcWork">—</span>
+          <span class="text-muted" style="margin:0 10px">·</span>
+          休息 <span class="calc-big" id="calcRest">—</span>
+          <a tabindex="0" class="help-i" data-toggle="popover" data-trigger="focus" data-placement="top"
+            data-html="true" data-title="工作時間 / 休息時間"
+            data-content="由上方三段時段<b>即時算出</b>：各段上下班長度相加，再扣掉有勾「扣除休息時間」的休息長度。<br>此結果會與「基本」頁的每日工時比對，不一致時按下「工作時間檢查」會提醒。">?</a>
+        </div>
+        <div class="pull-right">
+          <button class="btn btn-default" onclick="checkWork()"><i class="fa fa-check fa-fw"></i> 工作時間檢查</button>
+          <button class="btn btn-default" data-dismiss="modal">返回</button>
+          <button class="btn btn-primary" id="edSave" data-dismiss="modal"><i class="fa fa-save fa-fw"></i> 更新</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+<!-- ===================== 從母庫重置 確認彈窗 ===================== -->
+<div class="modal fade" id="mReset"><div class="modal-dialog">
+  <div class="modal-content">
+    <div class="modal-header"><button class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title text-red"><i class="fa fa-exclamation-triangle fa-fw"></i> 從母庫重置工作時間設定</h4></div>
+    <div class="modal-body">
+      <div class="callout callout-danger" style="margin-top:0">
+        <p style="margin:0">此動作會<b>清空本公司目前 <span id="resetCount">0</span> 筆工作時間設定</b>，
+          改以金豐母庫的範本整批覆蓋，<b>無法復原</b>。</p>
+      </div>
+      <p>系統會先檢查是否有工作時間正被員工或班表使用；<b>只要有任何一筆在使用中，整個重置都會被擋下</b>。</p>
+      <div id="resetBlock"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-dismiss="modal">取消</button>
+      <button class="btn btn-danger" id="btnResetGo" data-dismiss="modal">我了解，執行重置</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- ===================== 刪除 確認彈窗 ===================== -->
+<div class="modal fade" id="mDel"><div class="modal-dialog">
+  <div class="modal-content">
+    <div class="modal-header"><button class="close" data-dismiss="modal">&times;</button>
+      <h4 class="modal-title" id="delTitle">刪除工作時間</h4></div>
+    <div class="modal-body" id="delBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-default" id="btnDelCancel" data-dismiss="modal">取消</button>
+      <button class="btn btn-danger" id="btnDelGo" data-dismiss="modal">刪除</button>
+    </div>
+  </div>
+</div></div>
+
+<script src="plugins/jQuery/jquery-2.2.3.min.js"></script>
+<script src="bootstrap/js/bootstrap.min.js"></script>
+<script src="plugins/datepicker/bootstrap-datepicker.js"></script>
+<script src="dist/js/app.min.js"></script>
+<script>
+/* =====================================================================
+   假資料：對應 B工時設定 的欄位（名稱 / 排序 / 隱藏 / 三段起訖 + 休息 /
+   跨夜 / 扣除休息 / 每日每周工時 / 打卡限制 / 加班限制 / 自訂例休假）
+   use = 目前有多少 人事資料 與 員工班表 指定此工作時間
+   ===================================================================== */
+var DATA = [
+  { n:'日班',           sort:1,  hide:0, dh:8,   wh:40,   emp:86, sch:1240,
+    segs:[{s:'08:00',e:'17:00',night:0,rs:'12:00',re:'13:00',ded:1}],
+    before:30, after:60, otAfter:30, otLimit:'18:00', otRest:0, cr:0, rd:0, od:0, rate:0 },
+  { n:'行政班',         sort:2,  hide:0, dh:7.5, wh:37.5, emp:31, sch:470,
+    segs:[{s:'08:30',e:'17:30',night:0,rs:'12:00',re:'13:30',ded:1}],
+    before:30, after:60, otAfter:30, otLimit:'18:30', otRest:0, cr:0, rd:0, od:0, rate:0 },
+  { n:'早班',           sort:3,  hide:0, dh:8,   wh:40,   emp:12, sch:180,
+    segs:[{s:'06:00',e:'15:00',night:0,rs:'10:00',re:'11:00',ded:1}],
+    before:20, after:60, otAfter:30, otLimit:'16:00', otRest:0, cr:0, rd:0, od:0, rate:0 },
+  { n:'中班',           sort:4,  hide:0, dh:8,   wh:40,   emp:9,  sch:132,
+    segs:[{s:'14:00',e:'23:00',night:0,rs:'18:00',re:'19:00',ded:1}],
+    before:20, after:60, otAfter:30, otLimit:'00:00', otRest:0, cr:0, rd:0, od:0, rate:0 },
+  { n:'大夜班',         sort:5,  hide:0, dh:7,   wh:35,   emp:7,  sch:98,
+    segs:[{s:'22:00',e:'06:00',night:1,rs:'02:00',re:'03:00',ded:1}],
+    before:20, after:60, otAfter:30, otLimit:'07:00', otRest:30, cr:1, rd:6, od:7, rate:0 },
+  { n:'二段班(餐飲)',   sort:6,  hide:0, dh:8,   wh:40,   emp:24, sch:360,
+    segs:[{s:'10:00',e:'14:00',night:0,rs:'',re:'',ded:0},
+          {s:'17:00',e:'21:00',night:0,rs:'',re:'',ded:0}],
+    before:15, after:45, otAfter:30, otLimit:'21:00', otRest:0, cr:0, rd:0, od:0, rate:1 },
+  { n:'三段輪班A',      sort:7,  hide:0, dh:9,   wh:45,   emp:5,  sch:60,
+    segs:[{s:'08:00',e:'11:00',night:0,rs:'',re:'',ded:0},
+          {s:'12:00',e:'15:00',night:0,rs:'',re:'',ded:0},
+          {s:'16:00',e:'19:00',night:0,rs:'',re:'',ded:0}],
+    before:15, after:45, otAfter:30, otLimit:'19:00', otRest:0, cr:0, rd:0, od:0, rate:1 },
+  { n:'保全日勤',       sort:8,  hide:0, dh:11,  wh:55,   emp:4,  sch:56,
+    segs:[{s:'07:00',e:'19:00',night:0,rs:'12:00',re:'13:00',ded:1}],
+    before:30, after:30, otAfter:30, otLimit:'19:00', otRest:0, cr:1, rd:6, od:7, rate:0 },
+  { n:'保全夜勤',       sort:9,  hide:0, dh:11,  wh:55,   emp:4,  sch:56,
+    segs:[{s:'19:00',e:'07:00',night:1,rs:'00:00',re:'01:00',ded:1}],
+    before:30, after:30, otAfter:30, otLimit:'07:00', otRest:0, cr:1, rd:6, od:7, rate:0 },
+  { n:'產線A班',        sort:10, hide:0, dh:7.5, wh:37.5, emp:38, sch:520,
+    segs:[{s:'08:00',e:'16:00',night:0,rs:'12:00',re:'12:30',ded:1}],
+    before:15, after:45, otAfter:30, otLimit:'16:00', otRest:30, cr:0, rd:0, od:0, rate:0 },
+  { n:'產線B班',        sort:11, hide:0, dh:7.5, wh:37.5, emp:35, sch:498,
+    segs:[{s:'16:00',e:'00:00',night:1,rs:'20:00',re:'20:30',ded:1}],
+    before:15, after:45, otAfter:30, otLimit:'00:00', otRest:30, cr:0, rd:0, od:0, rate:0 },
+  { n:'產線C班',        sort:12, hide:0, dh:7.5, wh:37.5, emp:33, sch:472,
+    segs:[{s:'00:00',e:'08:00',night:0,rs:'04:00',re:'04:30',ded:1}],
+    before:15, after:45, otAfter:30, otLimit:'08:00', otRest:30, cr:0, rd:0, od:0, rate:0 },
+  { n:'待命班(休息計工時)', sort:13, hide:0, dh:12, wh:48, emp:6, sch:84,
+    segs:[{s:'08:00',e:'20:00',night:0,rs:'12:00',re:'13:00',ded:0}],
+    before:30, after:60, otAfter:30, otLimit:'20:00', otRest:0, cr:1, rd:6, od:7, rate:0 },
+  { n:'工讀班(下午)',   sort:14, hide:0, dh:4,   wh:20,   emp:6,  sch:72,
+    segs:[{s:'13:00',e:'17:00',night:0,rs:'',re:'',ded:0}],
+    before:15, after:30, otAfter:0,  otLimit:'', otRest:0, cr:0, rd:0, od:0, rate:1 },
+  { n:'假日支援班',     sort:15, hide:0, dh:8,   wh:0,    emp:0,  sch:14,
+    segs:[{s:'09:00',e:'18:00',night:0,rs:'12:00',re:'13:00',ded:1}],
+    before:30, after:60, otAfter:30, otLimit:'18:00', otRest:0, cr:0, rd:0, od:0, rate:0 },
+  { n:'舊制日班(2023前)', sort:20, hide:1, dh:8.5, wh:42.5, emp:0,  sch:0,
+    segs:[{s:'08:00',e:'17:30',night:0,rs:'12:00',re:'13:00',ded:1}],
+    before:0, after:0, otAfter:0, otLimit:'', otRest:0, cr:0, rd:0, od:0, rate:0 },
+  { n:'試用期短班',     sort:21, hide:1, dh:6,   wh:30,   emp:0,  sch:0,
+    segs:[{s:'09:00',e:'16:00',night:0,rs:'12:00',re:'13:00',ded:1}],
+    before:0, after:0, otAfter:0, otLimit:'', otRest:0, cr:0, rd:0, od:0, rate:0 }
+];
+
+/* ---------- 小工具 ---------- */
+function toMin(t) { if (!t) return null; var p = t.split(':'); return (+p[0]) * 60 + (+p[1]); }
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function hm(mins) { return pad(Math.floor(mins / 60) % 24) + ':' + pad(mins % 60); }
+function hourOptions(sel) {
+  var h = '<option value=""></option>';
+  for (var i = 0; i < 24; i++) h += '<option>' + pad(i) + '</option>';
+  sel.html(h);
+}
+function minOptions(sel) {
+  var h = '<option value=""></option>';
+  for (var i = 0; i < 60; i += 5) h += '<option>' + pad(i) + '</option>';
+  sel.html(h);
+}
+
+/* 把一筆設定攤平成時間軸區塊；跨夜的段落往後推一天 */
+function spans(segs) {
+  var out = [];
+  $.each(segs, function (i, s) {
+    var st = toMin(s.s), en = toMin(s.e);
+    if (st === null || en === null) return;
+    if (s.night || en <= st) en += 1440;
+    out.push({ t: 'w', i: i, a: st, b: en });
+    var rs = toMin(s.rs), re = toMin(s.re);
+    if (rs !== null && re !== null && re !== rs) {
+      if (rs < st) { rs += 1440; re += 1440; }
+      else if (re <= rs) re += 1440;
+      out.push({ t: s.ded ? 'r' : 'rk', i: i, a: rs, b: re });
+    }
+  });
+  return out;
+}
+
+/* 工作 / 休息分鐘數 */
+function totals(segs) {
+  var w = 0, r = 0;
+  $.each(spans(segs), function (i, s) {
+    if (s.t === 'w') w += s.b - s.a; else if (s.t === 'r') r += s.b - s.a;
+  });
+  return { work: w - r, rest: r };
+}
+function hmText(m) {
+  if (m <= 0) return '0 小時 0 分';
+  return Math.floor(m / 60) + ' 小時 ' + (m % 60) + ' 分';
+}
+
+/* 時間軸 HTML
+   wrap=true（清單用）：一律 24 小時軸，跨夜的部分捲回同一條的最左邊，讓每一列可以互相比較
+   wrap=false（編輯用）：跨夜時展開成 48 小時軸，看得出來是延續到隔天 */
+function timeline(segs, wrap) {
+  var sp = spans(segs), max = 1440;
+  $.each(sp, function (i, s) { if (s.b > max) max = s.b; });
+  var scale = max > 1440 ? 2880 : 1440;
+
+  if (wrap) {
+    scale = 1440;
+    var parts = [];
+    $.each(sp, function (i, s) {
+      if (s.b <= 1440) parts.push(s);
+      else if (s.a >= 1440) parts.push({ t: s.t, i: s.i, a: s.a - 1440, b: s.b - 1440 });
+      else {
+        parts.push({ t: s.t, i: s.i, a: s.a, b: 1440 });
+        parts.push({ t: s.t, i: s.i, a: 0, b: s.b - 1440 });
+      }
+    });
+    sp = parts;
+  }
+  var h = '';
+  var step = scale / 1440 > 1 ? 240 : 120;   /* 48 小時軸刻度放疏一點 */
+  for (var t = step; t < scale; t += step) h += '<div class="tl-tick" style="left:' + (t / scale * 100) + '%"></div>';
+  $.each(sp, function (i, s) {
+    var cls = s.t === 'w' ? 'tl-work tl-s' + (s.i + 1)
+            : (s.t === 'r' ? 'tl-rest' : 'tl-rest tl-rest-keep');
+    h += '<div class="tl-bar ' + cls + '" style="left:' + (s.a / scale * 100) + '%;width:'
+       + ((s.b - s.a) / scale * 100) + '%"></div>';
+  });
+  if (scale > 1440) h += '<div class="tl-24" style="left:50%"></div>';
+  return { html: h, scale: scale };
+}
+function axisHtml(scale) {
+  var h = '', step = scale > 1440 ? 240 : 120;
+  for (var t = 0; t <= scale; t += step) {
+    h += '<span style="left:' + (t / scale * 100) + '%">' + (t / 60) + '</span>';
+  }
+  return h;
+}
+
+/* 文字摘要：08:00–17:00 休 12:00–13:00 */
+function segText(r) {
+  var out = [];
+  $.each(r.segs, function (i, s) {
+    var t = '<b>' + s.s + '–' + s.e + '</b>';
+    if (s.night) t += ' <span class="label label-warning">跨夜</span>';
+    if (s.rs && s.re) t += ' 休 ' + s.rs + '–' + s.re + (s.ded ? '' : '（不扣除）');
+    out.push(t);
+  });
+  return out.join(' ｜ ');
+}
+
+/* =====================================================================
+   清單
+   ===================================================================== */
+function renderList() {
+  var kw = $.trim($('#kw').val()), st = $('input[name=st]:checked').val(), html = '', shown = 0;
+  $.each(DATA, function (i, r) {
+    if (kw && r.n.indexOf(kw) < 0) return;
+    if (st !== 'ALL' && String(r.hide) !== st) return;
+    shown++;
+
+    var tl = timeline(r.segs, true);
+    html += '<tr' + (r.hide ? ' class="row-hidden"' : '') + '>'
+      + '<td class="act-cell">'
+      + '<button class="btn btn-default act-btn" data-toggle="tooltip" data-container="body" title="編輯"'
+      + ' onclick="openEdit(' + i + ')"><i class="fa fa-pencil"></i></button>'
+      + '<button class="btn btn-default act-btn" data-toggle="tooltip" data-container="body"'
+      + ' title="複製為新的一筆"><i class="fa fa-files-o"></i></button>'
+      + '<button class="btn btn-default act-btn" data-toggle="tooltip" data-container="body" title="'
+      + (r.hide ? '改為啟用' : '改為隱藏') + '"><i class="fa fa-' + (r.hide ? 'eye' : 'eye-slash') + '"></i></button>'
+      + '<button class="btn btn-default act-btn text-red" data-toggle="tooltip" data-container="body"'
+      + ' title="刪除" onclick="askDel(' + i + ')"><i class="fa fa-trash"></i></button></td>'
+      + '<td>' + r.n + '</td>'
+      + '<td><div class="tl tl-mini">' + tl.html + '</div>'
+      + '<div class="seg-text">' + segText(r) + '</div></td>'
+      + '<td class="num">' + r.sort + '</td>'
+      + '<td class="nowrap">' + (r.hide
+          ? '<span class="label label-default">隱藏</span>'
+          : '<span class="label label-success">啟用</span>') + '</td>'
+      + '</tr>';
+  });
+  $('#listBody').html(html);
+  $('#listCount').text(shown);
+  $('#listBody [data-toggle="tooltip"]').tooltip();
+}
+
+/* 刪除：按下當下才查是否被員工／班表使用（同現行 GridView1_RowDeleting 的時機） */
+function askDel(i) {
+  var r = DATA[i], used = r.emp + r.sch;
+  $('[data-toggle="tooltip"]').tooltip('hide');
+  if (used > 0) {
+    $('#delTitle').html('<i class="fa fa-ban fa-fw text-red"></i> 無法刪除');
+    $('#delBody').html('<div class="callout callout-danger" style="margin-top:0">'
+      + '<p style="margin:0">此工作時間正在使用中,無法刪除。</p></div>'
+      + '<p>「<b>' + r.n + '</b>」目前被 <b>員工 ' + r.emp + ' 筆</b>、<b>班表 ' + r.sch
+      + ' 筆</b> 指定使用。</p>'
+      + '<p class="text-muted">請先將這些員工／班表改掛其他工作時間，或改用「隱藏」讓它不再出現在選單。</p>');
+    $('#btnDelGo').hide();
+    $('#btnDelCancel').text('知道了');
+  } else {
+    $('#delTitle').text('刪除工作時間');
+    $('#delBody').html('<p>確定要刪除「<b>' + r.n + '</b>」嗎？</p>'
+      + '<p class="text-muted">已確認目前沒有任何員工或班表使用這筆設定，刪除後不影響既有出勤資料。</p>');
+    $('#btnDelGo').show();
+    $('#btnDelCancel').text('取消');
+  }
+  $('#mDel').modal('show');
+}
+
+/* =====================================================================
+   編輯彈窗
+   ===================================================================== */
+var editIdx = -1;
+
+function setHM(idPrefix, val) {
+  var p = val ? val.split(':') : ['', ''];
+  $('#' + idPrefix + 'h').val(p[0]); $('#' + idPrefix + 'm').val(p[1]);
+}
+function getHM(idPrefix) {
+  var h = $('#' + idPrefix + 'h').val(), m = $('#' + idPrefix + 'm').val();
+  return (h && m) ? h + ':' + m : '';
+}
+
+function openEdit(i) {
+  editIdx = i;
+  $('[data-toggle="tooltip"]').tooltip('hide');   /* 避免清單的 tooltip 卡在彈窗底下 */
+  var r = i < 0
+    ? { n:'', sort:'', hide:0, dh:'', wh:'', emp:0, sch:0,
+        segs:[{s:'',e:'',night:0,rs:'',re:'',ded:1}],
+        before:0, after:0, otAfter:0, otLimit:'', otRest:0, cr:0, rd:0, od:0, rate:0 }
+    : DATA[i];
+
+  $('#edTitle').text(i < 0 ? '新增工作時間' : '編輯工作時間：' + r.n);
+  $('#edUseNote').html(i < 0 ? '' :
+    (r.emp + r.sch > 0
+      ? '　<span class="text-yellow"><i class="fa fa-info-circle"></i> 使用中：員工 ' + r.emp
+        + ' 筆、班表 ' + r.sch + ' 筆，變更會影響這些資料的工時計算</span>'
+      : '　<span class="text-muted">目前未被任何員工或班表使用</span>'));
+  $('#edSave').html('<i class="fa fa-save fa-fw"></i> ' + (i < 0 ? '新增' : '更新'));
+
+  $('#edName').val(r.n); $('#edSort').val(r.sort); $('#edHidden').prop('checked', !!r.hide);
+  $('#edMode').val('1');
+  $('#edDayH').val(r.dh); $('#edWeekH').val(r.wh);
+  $('#edWithRate').prop('checked', !!r.rate);
+
+  for (var k = 1; k <= 3; k++) {
+    var s = r.segs[k - 1];
+    setHM('s' + k + 's', s ? s.s : ''); setHM('s' + k + 'e', s ? s.e : '');
+    setHM('r' + k + 's', s ? s.rs : ''); setHM('r' + k + 'e', s ? s.re : '');
+    $('#s' + k + 'night').prop('checked', !!(s && s.night));
+    $('#d' + k).prop('checked', !!(s && s.ded));
+    if (k > 1) {
+      $('#segOn' + k).prop('checked', !!s);
+      $('#segCard' + k).toggleClass('seg-off', !s);
+      $('#segCard' + k + ' .seg-body').toggle(!!s);
+    }
+  }
+
+  $('#edBefore').val(r.before); $('#edAfter').val(r.after); $('#edOTAfter').val(r.otAfter);
+  setHM('otl', r.otLimit);
+  $('#edOTRest').val(r.otRest);
+  $('#edCustomRest').prop('checked', !!r.cr);
+  $('#edRestDay').val(String(r.rd)); $('#edOffDay').val(String(r.od));
+  applyCustomRest();
+  applyAutoBreak();
+
+  $('#edWarn').hide();
+  $('#edScroll').scrollTop(0);
+  recalc();
+  $('#mEdit').modal('show');
+}
+
+/* 由表單當下的值組出 segs */
+function formSegs() {
+  var segs = [];
+  for (var k = 1; k <= 3; k++) {
+    if (k > 1 && !$('#segOn' + k).prop('checked')) continue;
+    segs.push({
+      s: getHM('s' + k + 's'), e: getHM('s' + k + 'e'),
+      night: $('#s' + k + 'night').prop('checked') ? 1 : 0,
+      rs: getHM('r' + k + 's'), re: getHM('r' + k + 'e'),
+      ded: $('#d' + k).prop('checked') ? 1 : 0
+    });
+  }
+  return segs;
+}
+
+function recalc() {
+  var segs = formSegs();
+  var tl = timeline(segs);
+  $('#edTl').html(tl.html);
+  $('#edTlAxis').html(axisHtml(tl.scale));
+  var t = totals(segs);
+  $('#calcWork').text(hmText(t.work));
+  $('#calcRest').text(hmText(t.rest));
+}
+
+/* 驗證訊息沿用現行 E033.aspx.cs 的文案 */
+function checkWork() {
+  var msg = '';
+  var dayH = $.trim($('#edDayH').val());
+  if (dayH === '') msg = '請輸入每日工作小時';
+  else if (isNaN(parseFloat(dayH))) msg = '每日工時設定時間異常!!!';
+  else if (!getHM('s1s') || !getHM('s1e')) msg = '第一段工作時間設定異常,工作時間(時,分)不可為空';
+  else if ($('#segOn2').prop('checked') && (!getHM('s2s') || !getHM('s2e')))
+    msg = '第二段工作時間設定異常,工作時間(時,分)不可為空';
+  else if ($('#segOn3').prop('checked') && (!getHM('s3s') || !getHM('s3e')))
+    msg = '第三段工作時間設定異常,工作時間(時,分)不可為空';
+
+  if (msg) { $('#edWarn').removeClass('alert-success').addClass('alert-danger')
+      .html('<i class="fa fa-exclamation-circle fa-fw"></i> ' + msg).show(); return; }
+
+  var t = totals(formSegs());
+  var expect = parseFloat(dayH) * 60;
+  if (Math.abs(t.work - expect) > 0.5) {
+    $('#edWarn').removeClass('alert-success').addClass('alert-danger')
+      .html('<i class="fa fa-exclamation-circle fa-fw"></i> 時段加總為 ' + hmText(t.work)
+        + '，與每日工時 ' + dayH + ' 小時不符，請確認。').show();
+  } else {
+    $('#edWarn').removeClass('alert-danger').addClass('alert-success')
+      .html('<i class="fa fa-check-circle fa-fw"></i> 檢查通過：時段加總 ' + hmText(t.work)
+        + '，與每日工時相符。').show();
+  }
+}
+
+/* 自訂例休假：未勾選時兩個下拉停用（同現行頁面的 jQuery 行為） */
+function applyCustomRest() {
+  var on = $('#edCustomRest').prop('checked');
+  $('#edRestDay, #edOffDay').prop('disabled', !on);
+  $('#rowRestDay').css('opacity', on ? 1 : .55);
+}
+
+/* 公司參數「加班自動分段」→ 決定加班休息時間的設定介面 */
+function applyAutoBreak() {
+  var auto = $('#optAutoBreak').prop('checked');
+  $('#rowBreakMethod').toggle(auto);
+  var byRange = auto && $('#edBreakMethod').val() === '1';
+  $('#rowBreakMinute').toggle(!byRange);
+  $('#boxBreakRange').toggle(byRange);
+}
+
+/* 加班休息時段（平日 3 組 / 非平日 4 組），結構同現行頁面 */
+function breakGroupHtml(no) {
+  return '<div class="ot-grp"><span class="grp-no">第 ' + no + ' 組</span>'
+    + '<div class="hm"><select class="form-control h"></select><span class="hm-sep">:</span>'
+    + '<select class="form-control m"></select><span class="hm-sep">~</span>'
+    + '<select class="form-control h"></select><span class="hm-sep">:</span>'
+    + '<select class="form-control m"></select></div>'
+    + '<select class="form-control" style="width:150px">'
+    + '<option>沒有跨夜</option><option>結束時間有跨夜</option><option>起訖都有跨夜</option></select></div>';
+}
+
+/* =====================================================================
+   舊版佈局重現
+   ===================================================================== */
+function toggleOldUI() {
+  var nowOld = $('body').toggleClass('ui-old').hasClass('ui-old');
+  if (!nowOld) {
+    $('#oldNotice').show();
+    $('body').removeClass('old-note-off');
+    $('#oldPopup').hide();
+  }
+  window.scrollTo(0, 0);
+}
+function hideOldNotice() { $('#oldNotice').hide(); $('body').addClass('old-note-off'); }
+
+function renderOld() {
+  var html = '';
+  $.each(DATA, function (i, r) {
+    html += '<tr>'
+      + '<td><a href="javascript:;" onclick="showOldPopup()">選取</a>　'
+      + '<a href="javascript:;">刪除</a></td>'
+      + '<td>' + r.n + '</td>'
+      + '<td class="c">' + r.sort + '</td>'
+      + '<td class="c">' + (r.hide ? '&#x2705;' : '') + '</td></tr>';
+  });
+  $('#oldBody').html(html);
+
+  /* 原面板：約 20 個 kf-box 平鋪，時/分皆為下拉，靠 &nbsp; 對齊 */
+  var rows = [
+    ['上班開始時間1', '休息開始時間1', ''],
+    ['下班結束時間1', '休息結束時間1', '第一段跨夜 / 扣除休息時間'],
+    ['上班開始時間2', '休息開始時間2', '二段工時'],
+    ['下班結束時間2', '休息結束時間2', '第二段跨夜 / 扣除休息時間'],
+    ['上班開始時間3', '休息開始時間3', '三段工時'],
+    ['下班結束時間3', '休息結束時間3', '第三段跨夜 / 扣除休息時間']
+  ];
+  var h = '<div class="kf-box"><label>名稱 </label>&nbsp;&nbsp;<input class="old-input">'
+        + '&nbsp;&nbsp;<label>排序 </label>&nbsp;&nbsp;<input class="old-input" style="width:60px">'
+        + '&nbsp;&nbsp;<label><input type="checkbox"> 隱藏</label></div>'
+        + '<div class="kf-box"><label>打卡模式</label>&nbsp;&nbsp;'
+        + '<select class="old-input"><option>正常打卡</option></select></div>'
+        + '<div class="kf-box"><label>每日 </label>&nbsp;&nbsp;<input class="old-input" style="width:50px">'
+        + '<label>小時;</label>&nbsp;&nbsp;&nbsp;&nbsp;<label>每周 </label>&nbsp;&nbsp;'
+        + '<input class="old-input" style="width:50px"><label>小時</label></div>';
+  $.each(rows, function (i, r) {
+    h += '<div class="kf-box"><label>' + r[0] + ' </label>&nbsp;&nbsp;'
+       + '<select class="old-input old-h"></select><label>點 </label>&nbsp;&nbsp;'
+       + '<select class="old-input old-m"></select><label>分 </label>'
+       + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+       + '<label>' + r[1] + ' </label>&nbsp;&nbsp;'
+       + '<select class="old-input old-h"></select><label>點 </label>&nbsp;&nbsp;'
+       + '<select class="old-input old-m"></select><label>分 </label>&nbsp;&nbsp;&nbsp;&nbsp;'
+       + (r[2] ? '<label>' + r[2] + '</label>' : '') + '</div>';
+  });
+  h += '<div class="kf-box"><label>上班前 </label>&nbsp;&nbsp;<input class="old-input" style="width:50px" value="0">'
+     + '<label>分鐘內可打卡(設定0為不限制)</label></div>'
+     + '<div class="kf-box"><label>下班後 </label>&nbsp;&nbsp;<input class="old-input" style="width:50px" value="0">'
+     + '<label>分鐘內正常打卡,超過時間則再設定時間內隨機打卡(設定0為不限制)</label></div>'
+     + '<div class="kf-box"><label>加班申請結束後</label>&nbsp;&nbsp;<input class="old-input" style="width:50px" value="0">'
+     + '<label>分鐘內正常打卡,超過時間則再設定時間內隨機打卡(設定0為不限制)</label></div>'
+     + '<div class="kf-box"><label><input type="checkbox"> 工作津貼依照出勤比例發放</label></div>'
+     + '<div class="kf-box"><label><input type="checkbox"> 自訂例休假</label>&nbsp;&nbsp;'
+     + '<label>休息日:</label><select class="old-input"><option></option></select>&nbsp;&nbsp;'
+     + '<label>例假日:</label><select class="old-input"><option></option></select>&nbsp;&nbsp;'
+     + '<label>(未勾選則以「全年度行事曆設定」為主)</label></div>'
+     + '<div class="kf-box"><label>加班開始限制 </label>&nbsp;&nbsp;'
+     + '<select class="old-input old-h"></select><label>點 </label>&nbsp;&nbsp;'
+     + '<select class="old-input old-m"></select><label>分 </label></div>'
+     + '<div class="kf-box"><label>加班休息時間 </label>&nbsp;&nbsp;'
+     + '<input class="old-input" style="width:50px" value="0"><label>分(設定0為不限制)</label></div>'
+     + '<div class="kf-box"><label>休息時間 </label>&nbsp;&nbsp;'
+     + '<input class="old-input" style="width:100px" value="0" disabled><label>小時</label></div>'
+     + '<div class="kf-box" style="border-top:1px solid #333;padding-top:8px">'
+     + '<label>工作時間 </label>&nbsp;&nbsp;<label>8</label><label>小時</label>&nbsp;&nbsp;'
+     + '<label>0</label><label>分</label>&nbsp;&nbsp;<button class="old-btn">工作時間檢查</button></div>'
+     + '<div class="kf-box"><button class="old-btn">新增</button>'
+     + '<button class="old-btn">更新</button>'
+     + '<button class="old-btn" onclick="$(\'#oldPopup\').hide()">返回</button></div>';
+  $('#oldPopBody').html(h);
+  $('#oldPopBody .old-h').each(function () { hourOptions($(this)); });
+  $('#oldPopBody .old-m').each(function () { minOptions($(this)); });
+}
+
+function showOldPopup() { $('#oldPopup').css('display', 'flex'); }
+
+/* 原頁用 DragPanelExtender，這裡做個等價的拖曳讓對照更真實 */
+function enableDrag() {
+  var $p = $('#oldPopup'), dragging = false, ox = 0, oy = 0;
+  $p.on('mousedown', '.pop-drag', function (e) {
+    dragging = true;
+    ox = e.pageX - $p.offset().left; oy = e.pageY - $p.offset().top;
+    e.preventDefault();
+  });
+  $(document).on('mousemove', function (e) {
+    if (!dragging) return;
+    $p.css({ left: e.pageX - ox, top: e.pageY - oy });
+  }).on('mouseup', function () { dragging = false; });
+}
+
+/* =====================================================================
+   初始化
+   ===================================================================== */
+$(function () {
+  $('#mEdit select.h').each(function () { hourOptions($(this)); });
+  $('#mEdit select.m').each(function () { minOptions($(this)); });
+
+  var wd = '', hd = '';
+  for (var i = 1; i <= 3; i++) wd += breakGroupHtml(i);
+  for (var j = 1; j <= 4; j++) hd += breakGroupHtml(j);
+  $('#wdBreak').html(wd); $('#hdBreak').html(hd);
+  $('#wdBreak select.h, #hdBreak select.h').each(function () { hourOptions($(this)); });
+  $('#wdBreak select.m, #hdBreak select.m').each(function () { minOptions($(this)); });
+
+  /* 第二、三段開關 */
+  $('#segOn2, #segOn3').on('change', function () {
+    var k = this.id.slice(-1), on = this.checked;
+    $('#segCard' + k).toggleClass('seg-off', !on);
+    $('#segCard' + k + ' .seg-body').slideToggle(120);
+    recalc();
+  });
+
+  /* 任何時段欄位變動即時重算 */
+  $('#secSeg').on('change', 'select, input[type=checkbox]', recalc);
+
+  $('#resetCount').text(DATA.length);
+  var inUse = $.grep(DATA, function (r) { return r.emp + r.sch > 0; });
+  $('#resetBlock').html(inUse.length
+    ? '<div class="alert alert-danger" style="margin:0"><i class="fa fa-ban fa-fw"></i> '
+      + '目前有 <b>' + inUse.length + '</b> 筆工作時間正在使用中（例如「' + inUse[0].n
+      + '」），<b>重置會被系統擋下</b>。'
+    + '</div>'
+    : '');
+  $('#btnResetGo').prop('disabled', inUse.length > 0);
+
+  renderList();
+  renderOld();
+  enableDrag();
+  applyAutoBreak();
+  applyCustomRest();
+
+  $('[data-toggle="tooltip"]').tooltip();
+  $('[data-toggle="popover"]').popover();
+  /* 彈窗內的 popover 需在開啟後重新綁定一次，避免第一次不作用 */
+  $('#mEdit').on('shown.bs.modal', function () { $('#mEdit [data-toggle="popover"]').popover(); });
+});
+</script>
+</body>
+</html>
