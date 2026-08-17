@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>工作時間設定頁 UI/UX 改良提案</title>
+<link rel="stylesheet" href="mockup/bootstrap/css/bootstrap.min.css">
+<style>
+  :root{
+    --ink:#2c3e50; --sub:#6b7a8a; --line:#e4e9ee;
+    --blue:#3c8dbc; --blue-d:#2c6d92; --green:#00a65a; --red:#dd4b39; --amber:#f39c12;
+    --bg:#f4f6f9;
+  }
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:"Microsoft JhengHei","Segoe UI",Arial,sans-serif;
+    color:var(--ink); background:var(--bg);
+    font-size:17px; line-height:1.75; margin:0;
+  }
+  .wrap{max-width:1080px; margin:0 auto; padding:0 24px;}
+
+  /* ---------- hero ---------- */
+  .hero{background:linear-gradient(135deg,#367fa9 0%,#3c8dbc 55%,#5aa4cc 100%); color:#fff; padding:64px 0 56px;}
+  .hero .tag{display:inline-block; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.4);
+    border-radius:99px; padding:2px 16px; font-size:14px; letter-spacing:1px; margin-bottom:18px;}
+  .hero h1{font-size:40px; font-weight:700; margin:0 0 10px; line-height:1.35;}
+  .hero .path{font-size:17px; opacity:.92; margin-bottom:6px;}
+  .hero .lede{font-size:19px; opacity:.95; max-width:760px; margin:14px 0 30px;}
+  .btn-demo{display:inline-block; background:#fff; color:var(--blue-d); font-size:20px; font-weight:700;
+    padding:14px 34px; border-radius:8px; text-decoration:none; box-shadow:0 4px 14px rgba(0,0,0,.18);}
+  .btn-demo:hover,.btn-demo:focus{background:#eef6fb; color:var(--blue-d); text-decoration:none;}
+  .hero small{display:block; margin-top:10px; font-size:14px; opacity:.85;}
+
+  /* ---------- benefit cards ---------- */
+  .benefits{margin-top:-34px;}
+  .benefit-row{display:grid; grid-template-columns:repeat(4,1fr); gap:16px;}
+  .benefit{background:#fff; border-radius:10px; padding:20px 18px; box-shadow:0 2px 10px rgba(44,62,80,.10);}
+  .benefit .b-icon{font-size:26px; margin-bottom:6px;}
+  .benefit h3{font-size:17px; font-weight:700; margin:0 0 6px;}
+  .benefit p{font-size:14.5px; color:var(--sub); margin:0;}
+  @media (max-width:900px){.benefit-row{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:560px){.benefit-row{grid-template-columns:1fr;}}
+
+  /* ---------- 目錄（吸頂導覽） ---------- */
+  #toc{position:sticky; top:0; z-index:100; margin-top:34px;
+    background:rgba(255,255,255,.97); border-bottom:1px solid var(--line);
+    box-shadow:0 1px 6px rgba(44,62,80,.08);}
+  #toc .wrap{display:flex; align-items:center; gap:2px; overflow-x:auto; -webkit-overflow-scrolling:touch;}
+  #toc .toc-label{flex:none; font-size:13px; color:#9aa8b5; letter-spacing:1px;
+    padding-right:12px; margin-right:4px; border-right:1px solid var(--line);}
+  #toc a{flex:none; white-space:nowrap; padding:13px 14px; font-size:15px;
+    color:var(--sub); text-decoration:none; border-bottom:3px solid transparent;}
+  #toc a:hover,#toc a:focus{color:var(--blue-d); background:#f2f7fb; text-decoration:none;}
+  #toc a.on{color:var(--blue-d); font-weight:700; border-bottom-color:var(--blue);}
+  @media (max-width:640px){ #toc .toc-label{display:none;} #toc a{padding:12px 10px; font-size:14px;} }
+
+  /* ---------- sections ---------- */
+  section{padding:56px 0 8px; scroll-margin-top:52px;}
+  .sec-kicker{color:var(--blue); font-weight:700; font-size:14px; letter-spacing:2px;}
+  h2.sec-title{font-size:29px; font-weight:700; margin:4px 0 6px;}
+  .sec-note{color:var(--sub); margin-bottom:26px;}
+
+  /* ---------- pain list ---------- */
+  .pain{background:#fff; border:1px solid var(--line); border-left:4px solid var(--red);
+    border-radius:8px; padding:16px 20px; margin-bottom:14px;}
+  .pain b{font-size:17.5px;}
+  .pain p{margin:4px 0 0; color:var(--sub); font-size:15.5px;}
+
+  /* ---------- screenshots ---------- */
+  .shot-pair{display:grid; grid-template-columns:1fr 1fr; gap:22px; margin:26px 0 10px;}
+  @media (max-width:820px){.shot-pair{grid-template-columns:1fr;}}
+  .shot{background:#fff; border:1px solid var(--line); border-radius:10px; padding:14px; box-shadow:0 2px 8px rgba(44,62,80,.06);}
+  .shot h4{margin:0 0 10px; font-size:16px; font-weight:700; text-align:center;}
+  .shot h4 .lbl{border-radius:4px; padding:2px 12px; font-size:13px; margin-right:8px;}
+  .lbl-old{background:#fbe4e1; color:#b03225;}
+  .lbl-new{background:#dff0e6; color:#0c7a44;}
+  .shot img{width:100%; height:auto; display:block; border:1px solid #dfe6ec; border-radius:4px;
+    cursor:zoom-in; transition:box-shadow .15s;}
+  .shot img:hover{box-shadow:0 0 0 3px rgba(60,141,188,.45);}
+  .shot .cap{margin:10px 2px 0; font-size:14px; color:var(--sub);}
+  .shot .zoom-hint{margin:8px 2px 0; font-size:13px; color:var(--blue);}
+
+  /* ---------- lightbox：點圖開新舊並排大圖 ---------- */
+  #lightbox{position:fixed; inset:0; z-index:1000; background:rgba(15,22,30,.97);
+    display:flex; flex-direction:column; padding:20px 24px;}
+  #lightbox[hidden]{display:none;}
+  .lb-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+  .lb-title{color:#fff; font-size:18px; font-weight:700;}
+  .lb-close{background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.35);
+    border-radius:6px; font-size:16px; padding:6px 18px; cursor:pointer;}
+  .lb-close:hover{background:rgba(255,255,255,.24);}
+  .lb-mode{display:flex; gap:6px;}
+  .lb-mode button{background:rgba(255,255,255,.12); color:#dfe8f0;
+    border:1px solid rgba(255,255,255,.3); border-radius:6px; padding:5px 14px;
+    font-size:14px; cursor:pointer;}
+  .lb-mode button:hover{background:rgba(255,255,255,.22);}
+  .lb-mode button.on{background:var(--blue); border-color:var(--blue); color:#fff;}
+  .lb-grid{flex:1; min-height:0; display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  @media (max-width:900px){.lb-grid{grid-template-columns:1fr; overflow-y:auto;}}
+  .lb-grid figure{margin:0; min-height:0; min-width:0; display:flex; flex-direction:column;}
+  .lb-grid figcaption{color:#e8eef4; text-align:center; margin-bottom:8px; font-size:15px; font-weight:700;}
+  .lb-grid figcaption .lbl{border-radius:4px; padding:2px 14px;}
+  .lb-pane{flex:1; min-height:0;}
+  .lb-grid img{display:block; border:1px solid rgba(255,255,255,.25); border-radius:4px; background:#1b232c;}
+  /* 適應視窗：整張圖縮到面板內完整可見 */
+  .lb-grid.mode-fit .lb-pane{display:flex;}
+  .lb-grid.mode-fit img{width:100%; height:100%; min-height:0; object-fit:contain;}
+  /* 佔滿全版：改單欄堆疊，每張撐滿整個版面寬，整體上下捲動 */
+  .lb-grid.mode-wide{grid-template-columns:1fr; overflow-y:auto;}
+  .lb-grid.mode-wide figure{min-height:auto;}
+  .lb-grid.mode-wide img{width:100%; height:auto;}
+  /* 原圖大小：1:1 像素，左右面板各自捲動 */
+  .lb-grid.mode-full .lb-pane{overflow:auto;}
+  .lb-grid.mode-full img{width:auto; max-width:none; height:auto;}
+  .lb-tip{color:#9fb2c2; font-size:13px; text-align:center; margin-top:10px;}
+
+  /* ---------- compare table ---------- */
+  .cmp{width:100%; background:#fff; border:1px solid var(--line); border-radius:10px; border-collapse:separate; border-spacing:0; overflow:hidden;}
+  .cmp th{background:#34495e; color:#fff; font-size:15.5px; padding:10px 14px; text-align:left; font-weight:700;}
+  .cmp td{padding:11px 14px; border-top:1px solid var(--line); font-size:15px; vertical-align:top;}
+  .cmp td.t{font-weight:700; white-space:nowrap; color:var(--blue-d);}
+  .cmp td.good{color:#0c7a44;}
+  .cmp tr:nth-child(even) td{background:#fafcfe;}
+  .tbl-scroll{overflow-x:auto;}
+
+  /* ---------- tech cards ---------- */
+  .tech-row{display:grid; grid-template-columns:repeat(2,1fr); gap:16px;}
+  @media (max-width:820px){.tech-row{grid-template-columns:1fr;}}
+  .tech{background:#fff; border:1px solid var(--line); border-radius:10px; padding:18px 20px;}
+  .tech h3{font-size:17px; font-weight:700; margin:0 0 8px; color:var(--blue-d);}
+  .tech ul{padding-left:20px; margin:0; color:#42525f; font-size:15px;}
+  .tech li{margin-bottom:5px;}
+
+  /* ---------- roadmap ---------- */
+  .phase{display:flex; gap:16px; background:#fff; border:1px solid var(--line); border-radius:10px; padding:16px 20px; margin-bottom:14px;}
+  .phase .no{flex:0 0 44px; height:44px; border-radius:50%; background:var(--blue); color:#fff;
+    font-size:20px; font-weight:700; display:flex; align-items:center; justify-content:center;}
+  .phase h3{margin:0 0 4px; font-size:17.5px; font-weight:700;}
+  .phase p{margin:0; color:var(--sub); font-size:15px;}
+  .risk{background:#fff8ec; border:1px solid #f3d9a4; border-left:4px solid var(--amber); border-radius:8px; padding:14px 20px; margin-top:20px;}
+  .risk b{color:#a06a00;}
+  .risk ul{margin:6px 0 0; padding-left:20px; font-size:15px; color:#5a4a2a;}
+
+  /* ---------- appendix ---------- */
+  details.appx{background:#fff; border:1px solid var(--line); border-radius:10px; padding:0 20px; margin:20px 0 60px;}
+  details.appx summary{cursor:pointer; padding:16px 0; font-size:17px; font-weight:700; color:var(--blue-d); outline:none;}
+  details.appx[open] summary{border-bottom:1px solid var(--line);}
+  details.appx .tbl-scroll{margin:16px 0 20px;}
+
+  footer{background:#2c3e50; color:#aeb9c4; font-size:14px; padding:22px 0; margin-top:20px;}
+
+  /* ---------- print ---------- */
+  @media print{
+    body{background:#fff; font-size:13px;}
+    .hero{padding:30px 0;}
+    .btn-demo, #toc{display:none;}
+    details.appx{display:block;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= 封面 ================= -->
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">UI/UX 改良提案 · 互動原型已完成</span>
+    <h1>工作時間設定頁面 改良提案</h1>
+    <div class="path">功能位置：企業管理專區 &gt; 公司資料設定 &gt; 公司出勤資料 &gt; 工作時間設定（E033）</div>
+    <p class="lede">
+      工作時間設定是全公司班別的<b>源頭參數</b>：每一筆設定的名稱會被員工班表與人事資料直接引用，
+      時段與休息的設定則決定出勤、加班、請假怎麼算。
+      本次以不動正式系統的方式，先做出可以實際點擊操作的改良原型，
+      把原本必須逐筆開面板才看得到的內容，攤到清單上一眼可讀。
+    </p>
+    <a class="btn-demo" href="mockup/E033-redesign.html" target="_blank">▶ 開啟互動原型（可實際點擊操作）</a>
+    <small>原型為靜態展示頁，使用假資料，不會影響正式系統。內建「切換舊版佈局」按鈕，可一鍵切回現行版面現場對照。</small>
+  </div>
+</header>
+
+<!-- ================= 效益 ================= -->
+<div class="benefits">
+  <div class="wrap">
+    <div class="benefit-row">
+      <div class="benefit">
+        <div class="b-icon">📊</div>
+        <h3>清單直接看得到班別</h3>
+        <p>新增「時段」欄，用時間軸與文字摘要呈現上下班與休息，不必逐筆開面板才知道內容。</p>
+      </div>
+      <div class="benefit">
+        <div class="b-icon">🗂️</div>
+        <h3>設定分成五個群組</h3>
+        <p>約 20 列平鋪的欄位改為基本／工作時段／打卡限制／加班／例休假五張卡，標題吸頂不迷路。</p>
+      </div>
+      <div class="benefit">
+        <div class="b-icon">⚡</div>
+        <h3>邊改邊看工時</h3>
+        <p>時段一改，時間軸與「工作時間／休息」時數立刻更新，不必按檢查、不必整頁刷新。</p>
+      </div>
+      <div class="benefit">
+        <div class="b-icon">🛡️</div>
+        <h3>危險動作講清楚</h3>
+        <p>「複製總設定」改名為「從母庫重置」並加確認；刪除被擋時明確列出被哪些員工與班表使用。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 目錄（吸頂導覽） ================= -->
+<nav id="toc">
+  <div class="wrap">
+    <span class="toc-label">目錄</span>
+    <a href="#pain">現況痛點</a>
+    <a href="#arch">新版架構</a>
+    <a href="#compare">改良對照</a>
+    <a href="#tech">技術說明</a>
+    <a href="#roadmap">導入規劃</a>
+    <a href="#appendix">完整清單</a>
+  </div>
+</nav>
+
+<!-- ================= 現況痛點 ================= -->
+<section id="pain">
+  <div class="wrap">
+    <div class="sec-kicker">01 WHY</div>
+    <h2 class="sec-title">現況痛點</h2>
+    <p class="sec-note">現行頁面功能齊全，設定項目也很完整，但介面停留在早期版本，實務上出現以下問題：</p>
+
+    <div class="pain"><b>清單看不出這個班別到底幾點上下班</b>
+      <p>清單只有「名稱／排序／隱藏」三欄，要知道任何一筆的時段，都得逐筆按「選取」把設定面板開起來看，看完再關掉換下一筆。班別一多，光比對「哪個班是早上六點的」就得開關十幾次。</p></div>
+    <div class="pain"><b>設定面板約 20 列欄位平鋪，沒有分組</b>
+      <p>名稱、工時、三段時段、打卡限制、加班、例休假全部一列一列往下排，靠空白字元對齊，沒有標題也沒有分區，新手不知道從哪裡開始、也不確定有沒有漏填。</p></div>
+    <div class="pain"><b>時／分全部是下拉，一段時段就要點 8 次</b>
+      <p>上班、下班、休息開始、休息結束各自拆成「時」和「分」兩個下拉；三段工時全開就是 24 個下拉平鋪在面板上，改一個班別的時間要點很多次。</p></div>
+    <div class="pain"><b>面板是自製浮動視窗，尺寸寫死 900×800</b>
+      <p>不是標準彈窗，沒有背景遮罩、也不能按 ESC 關閉；面板可以用滑鼠拖，但高度寫死，解析度較低時最下面的「新增／更新／返回」按鈕會被推出畫面。</p></div>
+    <div class="pain"><b>勾「二段工時／三段工時」整頁就刷新一次</b>
+      <p>這兩個勾選是整頁回傳（AutoPostBack）才把欄位打開，刷新後還得靠程式重新把面板叫回來顯示，畫面會閃一下、捲動位置也會跑掉。</p></div>
+    <div class="pain"><b>「複製總設定」看不出會清空整張表</b>
+      <p>這顆按鈕實際上是把本公司的工作時間設定<b>整批清掉</b>，再從金豐母庫的範本重新複製回來。畫面上只是一顆和「新增」長得一樣的灰色按鈕，按下去沒有任何確認；而且被使用中的資料擋下時，訊息還寫成「正在使用中,無法刪除。」——動作是重置，訊息說的是刪除。</p></div>
+    <div class="pain"><b>刪除被擋只有一句話，不說被誰用</b>
+      <p>刪除時若已有員工或班表在使用，只跳出「此工作時間正在使用中,無法刪除。」沒有說被幾個員工、幾筆班表使用，也沒有告訴使用者：淘汰舊班別其實應該用「隱藏」。</p></div>
+    <div class="pain"><b>狀態欄只有「✅」與空白</b>
+      <p>清單的「隱藏」欄，隱藏的顯示 ✅、啟用的是空白。掃視時要反推「沒有勾就是啟用」，而且欄名是「隱藏」不是「狀態」，容易看反。</p></div>
+    <div class="pain"><b>關鍵規則完全沒有畫面說明</b>
+      <p>跨夜要不要勾、「扣除休息時間」勾與不勾差在哪、隱藏之後歷史出勤會不會被影響、名稱其實是員工班表直接存的值（改名等於改掉所有對應）——這些規則都只存在程式與口耳相傳裡，畫面上一個字都沒有。</p></div>
+    <div class="pain"><b>工時試算要按按鈕、還是整頁刷新</b>
+      <p>「工作時間」不會跟著時段自動更新，得按「工作時間檢查」觸發整頁回傳才算一次；改一次時段就得再按一次。</p></div>
+
+    <div class="shot-pair">
+      <div class="shot">
+        <h4><span class="lbl lbl-old">改良前</span>現行版面重現 · 清單</h4>
+        <img src="img/e033-before-list.png" alt="改良前：現行工作時間設定清單">
+        <p class="cap">清單只有名稱、排序、隱藏三欄，看不出任何一筆的上下班時間；固定 550px 高的綠框面板，下方大片留白。狀態以 ✅／空白表示。</p>
+      </div>
+      <div class="shot">
+        <h4><span class="lbl lbl-new">改良後</span>互動原型 · 清單</h4>
+        <img src="img/e033-after-list.png" alt="改良後：新版工作時間設定清單">
+        <p class="cap">新增「時段」欄：時間軸配上「08:00–17:00 休 12:00–13:00」文字摘要，跨夜有標籤、二三段用不同顏色；狀態改綠色「啟用」／灰色「隱藏」標籤，表尾附顏色圖例。</p>
+      </div>
+    </div>
+
+    <div class="shot-pair">
+      <div class="shot">
+        <h4><span class="lbl lbl-old">改良前</span>現行版面重現 · 設定面板</h4>
+        <img src="img/e033-before-popup.png" alt="改良前：900×800 自製浮動面板">
+        <p class="cap">約 20 列欄位平鋪、沒有分組，時／分全是下拉；面板是可拖曳的自製浮動視窗，沒有遮罩，蓋在清單上面，尺寸寫死 900×800。</p>
+      </div>
+      <div class="shot">
+        <h4><span class="lbl lbl-new">改良後</span>互動原型 · 編輯彈窗</h4>
+        <img src="img/e033-after-edit.png" alt="改良後：分群組的標準彈窗">
+        <p class="cap">標準彈窗＋五個群組卡片；標題列直接顯示「使用中：員工 7 筆、班表 98 筆」。圖中為跨夜的大夜班，時間軸自動展開成 48 小時、紅線標出日界；頁尾即時顯示工作 7 小時、休息 1 小時。</p>
+      </div>
+    </div>
+
+    <p class="sec-note" style="margin-top:14px"><i class="glyphicon glyphicon-zoom-in"></i> <b>點任一張圖</b>可開啟全螢幕新舊並排對照。此處的「改良前」是<b>原型內建的現行版面重現</b>（同樣的假資料、仿現行 E033 的版面與自製浮動面板），不是正式系統的實機截圖；簡報時也可以直接在原型上按「切換舊版佈局」現場對照。</p>
+  </div>
+</section>
+
+<!-- ================= 新版架構 ================= -->
+<section id="arch">
+  <div class="wrap">
+    <div class="sec-kicker">02 WHAT</div>
+    <h2 class="sec-title">新版架構總覽</h2>
+    <p class="sec-note">畫面依「先查清單 → 需要改才開彈窗」的順序重新分層，查看與編輯分開：</p>
+
+    <div class="tech-row">
+      <div class="tech">
+        <h3>① 頁面級查詢列</h3>
+        <ul>
+          <li>名稱關鍵字與狀態（全部／啟用／隱藏）收在頁面最上方一列，與資料區塊分開。</li>
+          <li>查詢條件不再和「新增／複製總設定」等動作按鈕混在同一區。</li>
+        </ul>
+      </div>
+      <div class="tech">
+        <h3>② 清單加上「時段」欄</h3>
+        <ul>
+          <li>時間軸：藍／綠／橘依序代表第一、二、三段工作時間，斜線區塊是休息，淺藍斜線代表「休息但不扣除」。</li>
+          <li>時間軸下方同時給文字摘要（08:00–17:00 休 12:00–13:00），跨夜另掛「跨夜」標籤。</li>
+          <li>狀態改為綠色「啟用」／灰色「隱藏」標籤，隱藏的整列淡化。</li>
+          <li>操作欄改為四顆圖示鈕：編輯、複製為新的一筆、切換隱藏、刪除。</li>
+        </ul>
+      </div>
+      <div class="tech">
+        <h3>③ 編輯彈窗分五個群組</h3>
+        <ul>
+          <li><b>基本設定</b>：名稱、排序、狀態、打卡模式、每日／每周工時、津貼按比例。</li>
+          <li><b>工作時段</b>：第一段必填，第二、三段用勾選展開，時間以 hh:mm 併排呈現。</li>
+          <li><b>打卡限制</b>：上班前、下班後、加班結束後三個分鐘數，群組標題直接寫「皆填 0 代表不限制」。</li>
+          <li><b>加班</b>：加班開始限制、加班休息時間；公司啟用「加班自動分段」時才出現扣除方式與時段設定。</li>
+          <li><b>例休假</b>：自訂例休假與休息日／例假日，未勾選時下拉停用並淡化。</li>
+          <li>每個群組標題捲動時吸頂，欄位旁的「?」點開就是該欄位的實際規則說明。</li>
+        </ul>
+      </div>
+      <div class="tech">
+        <h3>④ 即時預覽與即時試算</h3>
+        <ul>
+          <li>時段一改，上方時間軸立刻重畫；有跨夜就展開成 48 小時軸並畫出日界紅線。</li>
+          <li>彈窗頁尾固定顯示「工作時間 X 小時 Y 分 · 休息 X 小時 Y 分」，隨時同步。</li>
+          <li>「工作時間檢查」的結果就地顯示在彈窗內，通過顯示綠色、不符顯示紅色並寫出差異。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 改良對照 ================= -->
+<section id="compare">
+  <div class="wrap">
+    <div class="sec-kicker">03 BEFORE → AFTER</div>
+    <h2 class="sec-title">重點改良對照</h2>
+    <p class="sec-note">精選 12 項使用者最有感的改良（完整 19 項清單見文末附錄）：</p>
+
+    <div class="tbl-scroll">
+      <table class="cmp">
+        <thead><tr><th style="width:16%">項目</th><th style="width:30%">原本</th><th style="width:30%">改成</th><th>好處</th></tr></thead>
+        <tbody>
+          <tr><td class="t">清單資訊量</td><td>只有 名稱／排序／隱藏 三欄</td><td>加上「時段」欄：時間軸＋文字摘要</td><td class="good">不開面板就知道每個班別幾點上下班、休息多久</td></tr>
+          <tr><td class="t">查看動線</td><td>逐筆按「選取」開 900×800 面板才看得到內容</td><td>清單直接看，要改才開彈窗</td><td class="good">查看與編輯分開，比對班別不必開關十幾次面板</td></tr>
+          <tr><td class="t">設定面板結構</td><td>約 20 列欄位平鋪、無分組、靠空白字元對齊</td><td>五個群組卡片，標題捲動時吸頂</td><td class="good">找欄位有方向，捲到一半也知道自己在哪一段</td></tr>
+          <tr><td class="t">彈窗形式</td><td>自製浮動面板，寫死 900×800、可拖曳、無遮罩</td><td>標準彈窗（寬度 92%、上限 1100px）</td><td class="good">有遮罩與 ESC 關閉，小螢幕不再把按鈕推出畫面</td></tr>
+          <tr><td class="t">時間輸入</td><td>時、分各一個下拉，三段全開共 24 個下拉平鋪</td><td>hh:mm 併排，「上班 ~ 下班」「休息開始 ~ 結束」成組</td><td class="good">視覺上是一個時間區間，不是四個獨立欄位</td></tr>
+          <tr><td class="t">二段／三段工時</td><td>勾選即整頁回傳，刷新後還要把面板重新叫回來</td><td>前端勾選就地展開卡片</td><td class="good">不刷頁、不閃爍、不跳位</td></tr>
+          <tr><td class="t">時段驗證</td><td>只能靠腦補：跨夜、休息落在哪裡完全看不出來</td><td>即時時間軸；跨夜展開 48 小時軸並畫出日界紅線</td><td class="good">跨夜與休息位置一眼看出來，設錯當場發現</td></tr>
+          <tr><td class="t">工時試算</td><td>要按「工作時間檢查」才算，且是整頁刷新</td><td>頁尾即時顯示工作／休息時數，檢查結果就地顯示</td><td class="good">邊改邊看，不必來回按按鈕等頁面重載</td></tr>
+          <tr><td class="t">刪除被擋</td><td>只跳「此工作時間正在使用中,無法刪除。」</td><td>彈窗列出<b>被員工 N 筆、班表 N 筆使用</b>，並提示可改用「隱藏」</td><td class="good">知道卡在哪、也知道下一步該怎麼做</td></tr>
+          <tr><td class="t">整批覆蓋防呆</td><td>「複製總設定」是灰按鈕、無確認，看不出會清空整張表</td><td>改名「從母庫重置」、紅色按鈕、確認彈窗先講明會清空幾筆且無法復原</td><td class="good">破壞性動作名實相符，不會被當成一般功能誤按</td></tr>
+          <tr><td class="t">狀態呈現</td><td>「隱藏」欄顯示 ✅ 或空白</td><td>綠色「啟用」／灰色「隱藏」標籤，隱藏列整列淡化</td><td class="good">掃視即知，不用反推空白的意思</td></tr>
+          <tr><td class="t">規則說明</td><td>跨夜、扣除休息、隱藏的影響等規則只存在程式裡</td><td>欄位旁「?」點開即為該欄位的實際規則說明</td><td class="good">設定當下看得到規則，少一次詢問顧問師</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 技術說明 ================= -->
+<section id="tech">
+  <div class="wrap">
+    <div class="sec-kicker">04 HOW</div>
+    <h2 class="sec-title">技術說明</h2>
+    <p class="sec-note">原型刻意零新依賴，全部沿用系統既有技術棧，將導入成本降到最低：</p>
+
+    <div class="tech-row">
+      <div class="tech">
+        <h3>零新框架，沿用既有資產</h3>
+        <ul>
+          <li>Bootstrap 3.3.7、AdminLTE 2、jQuery 2.2.3 全部取自現行專案。</li>
+          <li>沿用 E01_Style.css 與 E01.Master 的 header／側選單結構，視覺與現行系統一致。</li>
+          <li>不需引入任何新套件、不需升級前端框架。</li>
+        </ul>
+      </div>
+      <div class="tech">
+        <h3>彈窗標準化</h3>
+        <ul>
+          <li>原本的自製浮動面板（絕對定位＋寫死 900×800＋DragPanelExtender 拖曳）改為標準 Bootstrap modal。</li>
+          <li>自動獲得遮罩、ESC 關閉、焦點管理；不再需要 ScriptManager 與 DragPanelExtender。</li>
+          <li>後端為了「回傳後把面板重新顯示」而註冊的 ShowPopup／HidePopup 啟動腳本可一併移除。</li>
+        </ul>
+      </div>
+      <div class="tech">
+        <h3>版面與樣式現代化</h3>
+        <ul>
+          <li>清單原為固定 550px 高的綠框面板，改為視窗比例高度（max-height 66vh）＋表頭捲動時固定。</li>
+          <li>時／分下拉在頁面上是逐個寫死的選項（每個時下拉 24 項、分下拉 12 項，累積數百行標記），改為迴圈產生。</li>
+          <li>數字欄右對齊、等寬數字，排序與時數比對更好讀。</li>
+        </ul>
+      </div>
+      <div class="tech">
+        <h3>減少 PostBack</h3>
+        <ul>
+          <li>二段／三段工時的 AutoPostBack 與後端逐一設定 Enabled 的停用邏輯，改為前端顯示／隱藏。</li>
+          <li>工時試算改由前端即時計算並顯示，正式導入時仍以後端計算結果為最終依據。</li>
+          <li>加班休息「依起訖時間」的多組欄位改為條列的「第 N 組」，僅在公司啟用「加班自動分段」時出現。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 導入規劃 ================= -->
+<section id="roadmap">
+  <div class="wrap">
+    <div class="sec-kicker">05 NEXT</div>
+    <h2 class="sec-title">後續導入規劃</h2>
+    <p class="sec-note">目前完成的是<b>可操作的靜態原型</b>，尚未修改正式系統。建議依下列階段導入：</p>
+
+    <div class="phase"><div class="no">1</div><div>
+      <h3>規格確認（本次報告）</h3>
+      <p>以本原型為畫面與行為規格，收斂資訊部門、顧問師與管理層的意見，定版後不再重新發散。</p>
+    </div></div>
+    <div class="phase"><div class="no">2</div><div>
+      <h3>正式頁面版面移植</h3>
+      <p>將清單五欄結構、查詢列與分群組的編輯彈窗移植到正式 E033 頁面，先做到「長得一樣」，計算與存檔邏輯不動。</p>
+    </div></div>
+    <div class="phase"><div class="no">3</div><div>
+      <h3>後端接線與行為改造</h3>
+      <p>清單時段欄要撈出三段起訖與休息欄位、使用中筆數查詢、刪除與重置的訊息改寫、二三段改前端展開。此階段工作量最大，可再細分批次上線。</p>
+    </div></div>
+    <div class="phase"><div class="no">4</div><div>
+      <h3>測試、驗收與上線</h3>
+      <p>以實際情境演練（新增班別 → 掛到員工班表 → 改時段 → 淘汰改隱藏 → 刪除被擋），由人資與顧問師實際操作驗收後切換上線。</p>
+    </div></div>
+
+    <div class="risk">
+      <b>⚠ 風險與注意事項</b>
+      <ul>
+        <li>清單要畫時段，資料來源的查詢語法目前只撈 id、名稱、隱藏、排序，必須加撈三段上下班與休息欄位、跨夜與扣除休息旗標。</li>
+        <li>原型的工時／休息時數是前端重算的即時預覽，正式導入必須與後端既有的工作時間檢查邏輯對齊，以後端結果為準。</li>
+        <li>「使用中：員工 N 筆、班表 N 筆」需要新增查詢——現行頁面只在按下刪除的當下才去查，改版後清單與彈窗都要用到。</li>
+        <li>「從母庫重置」只是改名、加確認與修正訊息文案，底層「清空後從母庫整批複製」的行為不變，仍然無法復原。</li>
+        <li>原型的員工／班表使用筆數、以及所有班別資料都是假資料，移植時需接回正式資料來源與既有權限控制。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 附錄 ================= -->
+<section id="appendix" style="padding-top:32px;">
+  <div class="wrap">
+    <details class="appx">
+      <summary>附錄：完整改良清單（19 項）</summary>
+      <div class="tbl-scroll">
+        <table class="cmp">
+          <thead><tr><th style="width:4%">#</th><th style="width:32%">原本</th><th style="width:32%">改成</th><th>好處</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>清單只有 名稱／排序／隱藏 三欄</td><td>五欄：操作／名稱／時段／排序／狀態</td><td>清單本身就能回答「這個班幾點上下班」</td></tr>
+            <tr><td>2</td><td>時段資訊完全看不到</td><td>時間軸（三段配色＋休息斜線）＋文字摘要，表尾附圖例</td><td>可橫向比較不同班別的時間分布</td></tr>
+            <tr><td>3</td><td>要看內容必須逐筆「選取」開面板</td><td>清單直接看，需要改才開彈窗</td><td>查看動線與編輯動線分開</td></tr>
+            <tr><td>4</td><td>操作欄是「選取／刪除」文字連結</td><td>四顆圖示鈕：編輯／複製為新的一筆／切換隱藏／刪除</td><td>操作欄變窄，寬度還給資料欄</td></tr>
+            <tr><td>5</td><td>沒有以既有設定為基礎新增的方式</td><td>每列可「複製為新的一筆」</td><td>建立相似班別不必整份重打</td></tr>
+            <tr><td>6</td><td>「隱藏」欄顯示 ✅／空白</td><td>綠「啟用」／灰「隱藏」標籤，隱藏列整列淡化</td><td>狀態直接可讀，不用反推</td></tr>
+            <tr><td>7</td><td>清單固定 550px 高、僅水平捲軸</td><td>視窗比例高度＋表頭捲動時固定</td><td>各種螢幕都完整可用，捲動仍看得到欄位</td></tr>
+            <tr><td>8</td><td>查詢條件與動作按鈕混在同一區</td><td>查詢條件收成頁面最上方一列</td><td>條件與動作分層清楚</td></tr>
+            <tr><td>9</td><td>設定面板約 20 列欄位平鋪無分組</td><td>五個群組卡片（基本／工作時段／打卡限制／加班／例休假）</td><td>找欄位有方向，也看得出還有哪些沒填</td></tr>
+            <tr><td>10</td><td>群組標題不存在，捲動後不知道在哪一段</td><td>群組標題捲動時吸頂</td><td>長表單不迷路</td></tr>
+            <tr><td>11</td><td>自製浮動面板：絕對定位、寫死 900×800、無遮罩、可拖曳</td><td>標準 Bootstrap modal（92% 寬、上限 1100px）</td><td>有遮罩、ESC 關閉、焦點管理</td></tr>
+            <tr><td>12</td><td>時、分各一個下拉，三段全開 24 個下拉平鋪</td><td>hh:mm 併排成組，「上班 ~ 下班」「休息開始 ~ 結束」</td><td>一個時間區間就是一組欄位</td></tr>
+            <tr><td>13</td><td>勾二段／三段工時整頁回傳，還要重新叫回面板</td><td>前端勾選就地展開卡片</td><td>不刷頁、不跳位</td></tr>
+            <tr><td>14</td><td>跨夜與休息只能腦補</td><td>即時時間軸，跨夜展開 48 小時軸＋日界紅線</td><td>設定錯誤當場看得出來</td></tr>
+            <tr><td>15</td><td>工時要按「工作時間檢查」才算，且整頁刷新</td><td>頁尾即時顯示工作／休息時數，檢查結果就地提示</td><td>邊改邊看，回饋即時</td></tr>
+            <tr><td>16</td><td>不知道這筆有沒有人在用</td><td>彈窗標題列顯示「使用中：員工 N 筆、班表 N 筆」</td><td>改動前先知道會影響多少資料</td></tr>
+            <tr><td>17</td><td>刪除被擋只有一句「正在使用中,無法刪除。」</td><td>列出使用筆數並提示改用「隱藏」淘汰</td><td>使用者知道下一步怎麼做</td></tr>
+            <tr><td>18</td><td>「複製總設定」灰按鈕、無確認，訊息還寫成「無法刪除」</td><td>改名「從母庫重置」、紅色按鈕、確認彈窗與說明</td><td>高風險操作名實相符並加上確認門檻</td></tr>
+            <tr><td>19</td><td>跨夜／扣除休息／隱藏影響／名稱被班表引用等規則無說明</td><td>欄位旁「?」點開說明，寫的是實際規則</td><td>規則在使用當下可見，減少詢問與誤設</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    工作時間設定頁 UI/UX 改良提案 · 互動原型：<a href="mockup/E033-redesign.html" style="color:#7fb6d9;">mockup/E033-redesign.html</a>
+  </div>
+</footer>
+
+<!-- ===================== 點圖放大：新舊並排 lightbox ===================== -->
+<div id="lightbox" hidden>
+  <div class="lb-head">
+    <div class="lb-title">新舊版並排對照</div>
+    <div class="lb-mode" id="lbMode">
+      <button type="button" data-m="fit" class="on">適應視窗</button>
+      <button type="button" data-m="wide">佔滿全版</button>
+      <button type="button" data-m="full">原圖大小 1:1</button>
+    </div>
+    <button type="button" class="lb-close" id="lbClose">✕ 關閉</button>
+  </div>
+  <div class="lb-grid mode-fit" id="lbGrid"></div>
+  <div class="lb-tip">「佔滿全版」整體上下捲動；「原圖大小」左右兩張各自捲動。按 Esc、點「關閉」或點灰底處皆可關閉</div>
+</div>
+
+<script>
+(function () {
+  var lb = document.getElementById('lightbox');
+  var grid = document.getElementById('lbGrid');
+
+  function openPair(pair) {
+    grid.innerHTML = '';
+    pair.querySelectorAll('.shot').forEach(function (s) {
+      var fig = document.createElement('figure');
+      var cap = document.createElement('figcaption');
+      cap.innerHTML = s.querySelector('h4').innerHTML;
+      var pane = document.createElement('div');
+      pane.className = 'lb-pane';
+      var img = document.createElement('img');
+      img.src = s.querySelector('img').src;
+      img.alt = s.querySelector('img').alt;
+      pane.appendChild(img);
+      fig.appendChild(cap);
+      fig.appendChild(pane);
+      grid.appendChild(fig);
+    });
+    lb.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+  function close() {
+    lb.hidden = true;
+    document.body.style.overflow = '';
+  }
+  function setMode(m) {
+    grid.className = 'lb-grid mode-' + m;
+    document.querySelectorAll('#lbMode button').forEach(function (b) {
+      b.classList.toggle('on', b.getAttribute('data-m') === m);
+    });
+  }
+
+  document.querySelectorAll('.shot-pair').forEach(function (pair) {
+    pair.querySelectorAll('.shot img').forEach(function (img) {
+      img.addEventListener('click', function () { openPair(pair); });
+    });
+  });
+  document.querySelectorAll('#lbMode button').forEach(function (b) {
+    b.addEventListener('click', function () { setMode(b.getAttribute('data-m')); });
+  });
+  document.getElementById('lbClose').addEventListener('click', close);
+  lb.addEventListener('click', function (e) { if (e.target === lb || e.target === grid) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !lb.hidden) close(); });
+})();
+
+// 目錄：捲動高亮目前段落；跳到附錄時自動展開
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('#toc a'));
+  var sections = links.map(function (a) {
+    return document.querySelector(a.getAttribute('href'));
+  });
+
+  var appendixLink = document.querySelector('#toc a[href="#appendix"]');
+  if (appendixLink) {
+    appendixLink.addEventListener('click', function () {
+      var d = document.querySelector('details.appx');
+      if (d) d.open = true;
+    });
+  }
+
+  function highlight() {
+    var pos = window.scrollY + 120;   // 吸頂列高度的緩衝
+    var current = 0;
+    sections.forEach(function (sec, i) {
+      if (sec && sec.offsetTop <= pos) current = i;
+    });
+    // 捲到頁尾時，最後一項恆為目前段落
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 4) {
+      current = links.length - 1;
+    }
+    links.forEach(function (a, i) { a.classList.toggle('on', i === current); });
+  }
+
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(function () { highlight(); ticking = false; });
+  });
+  highlight();
+})();
+</script>
+
+</body>
+</html>
