@@ -1,0 +1,491 @@
+<title>雜湊與加密工具</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f7f7f8;
+    --panel: #ffffff;
+    --text: #1c1c1e;
+    --muted: #6b6b70;
+    --border: #d9d9de;
+    --accent: #2f6fed;
+    --mono-bg: #f0f0f2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1e;
+      --panel: #2a2a2d;
+      --text: #f2f2f3;
+      --muted: #9a9a9e;
+      --border: #3d3d40;
+      --accent: #6c9bff;
+      --mono-bg: #1f1f22;
+    }
+  }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, "Segoe UI", sans-serif; max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
+  h1 { font-size: 1.3rem; margin-bottom: 4px; }
+  p.sub { color: var(--muted); margin-top: 0; font-size: 0.9rem; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+  textarea { width: 100%; min-height: 110px; box-sizing: border-box; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--mono-bg); color: var(--text); font-family: Consolas, monospace; font-size: 0.9rem; resize: vertical; }
+  input[type="file"] { color: var(--text); }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+  .filename { color: var(--muted); font-size: 0.85rem; }
+  input[type="text"], input[type="password"], select { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--mono-bg); color: var(--text); font-family: Consolas, monospace; font-size: 0.9rem; }
+  h2 { font-size: 1rem; margin: 0 0 12px; }
+  .cols { display: flex; gap: 16px; flex-wrap: wrap; }
+  .cols > div { flex: 1; min-width: 260px; }
+  .btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: #fff; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+  .btn:hover { opacity: 0.9; }
+  .btn.secondary { background: transparent; color: var(--accent); }
+  .status { color: var(--muted); font-size: 0.85rem; min-height: 1.2em; margin: 8px 0 0; }
+  .status.error { color: #d64545; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { width: 110px; color: var(--muted); font-weight: 600; font-size: 0.85rem; }
+  .hash { font-family: Consolas, monospace; font-size: 0.9rem; word-break: break-all; }
+  .hash.empty { color: var(--muted); }
+  button.copy { margin-left: 8px; font-size: 0.75rem; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--mono-bg); color: var(--text); cursor: pointer; }
+  button.copy:hover { border-color: var(--accent); color: var(--accent); }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .tab-btn { padding: 10px 18px; border: none; background: none; color: var(--muted); font-weight: 600; font-size: 0.95rem; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+</style>
+
+<h1>雜湊與加密工具</h1>
+<p class="sub">MD5 / SHA-256 / SHA-512 雜湊計算，以及 AES-256-GCM 加密／解密。</p>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="hash">雜湊</button>
+  <button class="tab-btn" data-tab="aes">加密</button>
+</div>
+
+<section id="tab-hash" class="tab-panel active">
+
+<div class="panel">
+  <label for="textInput">文字輸入</label>
+  <textarea id="textInput" placeholder="在此輸入文字…"></textarea>
+  <div class="row">
+    <div>
+      <label style="margin-bottom:0">或選擇檔案</label>
+      <input type="file" id="fileInput">
+    </div>
+    <span class="filename" id="fileInfo"></span>
+    <button class="copy" id="clearFile" style="display:none">清除檔案</button>
+  </div>
+  <div class="row">
+    <div>
+      <label for="saltInput" style="margin-bottom:0">Salt（選填）</label>
+      <input type="text" id="saltInput" placeholder="不加密就留空">
+    </div>
+    <div>
+      <label for="saltPos" style="margin-bottom:0">Salt 位置</label>
+      <select id="saltPos">
+        <option value="prefix">前置：salt + 資料</option>
+        <option value="suffix">後置：資料 + salt</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <table>
+    <tbody>
+      <tr><th>MD5</th><td class="hash empty" id="out-md5">—</td></tr>
+      <tr><th>SHA-256</th><td class="hash empty" id="out-sha256">—</td></tr>
+      <tr><th>SHA-512</th><td class="hash empty" id="out-sha512">—</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</section>
+
+<section id="tab-aes" class="tab-panel">
+
+<div class="panel">
+  <h2>AES 加密 / 解密</h2>
+  <div class="row">
+    <div>
+      <label for="aesMode" style="margin-bottom:0">加密模式</label>
+      <select id="aesMode">
+        <option value="GCM">AES-GCM（含驗證，較安全）</option>
+        <option value="CBC">AES-CBC（C# Aes.Create() 預設）</option>
+      </select>
+    </div>
+    <div>
+      <label for="aesKeySource" style="margin-bottom:0">金鑰來源</label>
+      <select id="aesKeySource">
+        <option value="password">密碼衍生（PBKDF2）</option>
+        <option value="manual">手動輸入 Key / IV</option>
+      </select>
+    </div>
+    <div>
+      <label for="aesEncoding" style="margin-bottom:0">編碼格式</label>
+      <select id="aesEncoding">
+        <option value="base64">Base64</option>
+        <option value="hex">Hex</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="aesPasswordGroup" class="row">
+    <div style="flex:1">
+      <label for="aesPassword">密碼</label>
+      <input type="password" id="aesPassword" placeholder="加密與解密要用同一組密碼" style="width:100%; box-sizing:border-box;">
+    </div>
+  </div>
+
+  <div id="aesManualGroup" style="display:none">
+    <div class="row">
+      <div>
+        <label for="aesKeyIvEncoding" style="margin-bottom:0">Key / IV 格式</label>
+        <select id="aesKeyIvEncoding">
+          <option value="base64">Base64</option>
+          <option value="hex">Hex</option>
+          <option value="utf8">明文（UTF-8）</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div style="flex:1">
+        <label for="aesKeyInput">Key（<span id="aesKeyLenHint"></span>）</label>
+        <input type="text" id="aesKeyInput" placeholder="依上方格式輸入 Key" style="width:100%; box-sizing:border-box;">
+      </div>
+      <div style="flex:1">
+        <label for="aesIvInput">IV（<span id="aesIvLenHint"></span>）</label>
+        <input type="text" id="aesIvInput" placeholder="依上方格式輸入 IV" style="width:100%; box-sizing:border-box;">
+      </div>
+    </div>
+    <p class="status" id="aesKeyIvHint" style="margin-top:0"></p>
+  </div>
+
+  <div class="cols" style="margin-top:12px">
+    <div>
+      <label for="aesPlain">明文</label>
+      <textarea id="aesPlain" placeholder="要加密的文字"></textarea>
+    </div>
+    <div>
+      <label for="aesCipher">密文</label>
+      <textarea id="aesCipher" placeholder="要解密的密文"></textarea>
+    </div>
+  </div>
+  <div class="row">
+    <button class="btn" id="aesEncryptBtn">加密 →</button>
+    <button class="btn secondary" id="aesDecryptBtn">← 解密</button>
+  </div>
+  <p class="status" id="aesStatus"></p>
+</div>
+
+</section>
+
+<script>
+"use strict";
+
+/* ---------- MD5（瀏覽器無原生 API，純 JS 實作，RFC 1321） ---------- */
+const MD5_K = new Uint32Array([
+  0xd76aa478,0xe8c7b756,0x242070db,0xc1bdceee,0xf57c0faf,0x4787c62a,0xa8304613,0xfd469501,
+  0x698098d8,0x8b44f7af,0xffff5bb1,0x895cd7be,0x6b901122,0xfd987193,0xa679438e,0x49b40821,
+  0xf61e2562,0xc040b340,0x265e5a51,0xe9b6c7aa,0xd62f105d,0x02441453,0xd8a1e681,0xe7d3fbc8,
+  0x21e1cde6,0xc33707d6,0xf4d50d87,0x455a14ed,0xa9e3e905,0xfcefa3f8,0x676f02d9,0x8d2a4c8a,
+  0xfffa3942,0x8771f681,0x6d9d6122,0xfde5380c,0xa4beea44,0x4bdecfa9,0xf6bb4b60,0xbebfbc70,
+  0x289b7ec6,0xeaa127fa,0xd4ef3085,0x04881d05,0xd9d4d039,0xe6db99e5,0x1fa27cf8,0xc4ac5665,
+  0xf4292244,0x432aff97,0xab9423a7,0xfc93a039,0x655b59c3,0x8f0ccc92,0xffeff47d,0x85845dd1,
+  0x6fa87e4f,0xfe2ce6e0,0xa3014314,0x4e0811a1,0xf7537e82,0xbd3af235,0x2ad7d2bb,0xeb86d391,
+]);
+const MD5_S = [
+  7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,
+  5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,
+  4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,
+  6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21,
+];
+function rotl32(x, n) { return ((x << n) | (x >>> (32 - n))) >>> 0; }
+
+function md5(bytes) {
+  const origLenBits = BigInt(bytes.length) * 8n;
+  let padLen = (56 - (bytes.length + 1) % 64 + 64) % 64;
+  const total = bytes.length + 1 + padLen + 8;
+  const buf = new Uint8Array(total);
+  buf.set(bytes, 0);
+  buf[bytes.length] = 0x80;
+  const dv = new DataView(buf.buffer);
+  dv.setBigUint64(total - 8, origLenBits & 0xFFFFFFFFFFFFFFFFn, true);
+
+  let a0 = 0x67452301, b0 = 0xefcdab89, c0 = 0x98badcfe, d0 = 0x10325476;
+
+  for (let off = 0; off < total; off += 64) {
+    const M = new Uint32Array(16);
+    for (let j = 0; j < 16; j++) M[j] = dv.getUint32(off + j * 4, true);
+
+    let A = a0, B = b0, C = c0, D = d0;
+    for (let i = 0; i < 64; i++) {
+      let F, g;
+      if (i < 16) { F = (B & C) | (~B & D); g = i; }
+      else if (i < 32) { F = (D & B) | (~D & C); g = (5 * i + 1) % 16; }
+      else if (i < 48) { F = B ^ C ^ D; g = (3 * i + 5) % 16; }
+      else { F = C ^ (B | ~D); g = (7 * i) % 16; }
+      F = (F + A + MD5_K[i] + M[g]) >>> 0;
+      A = D; D = C; C = B;
+      B = (B + rotl32(F, MD5_S[i])) >>> 0;
+    }
+    a0 = (a0 + A) >>> 0; b0 = (b0 + B) >>> 0; c0 = (c0 + C) >>> 0; d0 = (d0 + D) >>> 0;
+  }
+
+  const out = new Uint8Array(16);
+  const odv = new DataView(out.buffer);
+  odv.setUint32(0, a0, true); odv.setUint32(4, b0, true);
+  odv.setUint32(8, c0, true); odv.setUint32(12, d0, true);
+  return toHex(out);
+}
+
+/* ---------- SHA-256 / SHA-512：使用瀏覽器原生 Web Crypto API ---------- */
+async function sha(algo, bytes) {
+  const digest = await crypto.subtle.digest(algo, bytes);
+  return toHex(new Uint8Array(digest));
+}
+
+function toHex(bytes) {
+  return Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
+}
+
+/* ---------- Tab 切換 ---------- */
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+  });
+});
+
+/* ---------- UI ---------- */
+const textInput = document.getElementById("textInput");
+const fileInput = document.getElementById("fileInput");
+const fileInfo = document.getElementById("fileInfo");
+const clearFileBtn = document.getElementById("clearFile");
+const saltInput = document.getElementById("saltInput");
+const saltPos = document.getElementById("saltPos");
+
+function concatBytes(a, b) {
+  const out = new Uint8Array(a.length + b.length);
+  out.set(a, 0);
+  out.set(b, a.length);
+  return out;
+}
+const outEls = {
+  md5: document.getElementById("out-md5"),
+  sha256: document.getElementById("out-sha256"),
+  sha512: document.getElementById("out-sha512"),
+};
+
+function setOutputs(values) {
+  for (const key of Object.keys(outEls)) {
+    const el = outEls[key];
+    el.textContent = values ? values[key] : "—";
+    el.classList.toggle("empty", !values);
+  }
+}
+
+let currentFile = null;
+let computeToken = 0;
+
+async function recompute() {
+  const token = ++computeToken;
+  let bytes;
+  if (currentFile) {
+    bytes = new Uint8Array(await currentFile.arrayBuffer());
+  } else {
+    bytes = new TextEncoder().encode(textInput.value);
+  }
+  if (bytes.length === 0) { setOutputs(null); return; }
+
+  const saltBytes = new TextEncoder().encode(saltInput.value);
+  if (saltBytes.length > 0) {
+    bytes = saltPos.value === "suffix" ? concatBytes(bytes, saltBytes) : concatBytes(saltBytes, bytes);
+  }
+
+  const [md5Hex, sha256Hex, sha512Hex] = await Promise.all([
+    Promise.resolve(md5(bytes)),
+    sha("SHA-256", bytes),
+    sha("SHA-512", bytes),
+  ]);
+  if (token !== computeToken) return; // 有更新的輸入，捨棄過期結果
+  setOutputs({ md5: md5Hex, sha256: sha256Hex, sha512: sha512Hex });
+}
+
+textInput.addEventListener("input", () => {
+  if (currentFile) { currentFile = null; fileInput.value = ""; fileInfo.textContent = ""; clearFileBtn.style.display = "none"; }
+  recompute();
+});
+
+fileInput.addEventListener("change", () => {
+  currentFile = fileInput.files[0] || null;
+  if (currentFile) {
+    textInput.value = "";
+    fileInfo.textContent = `${currentFile.name}（${currentFile.size.toLocaleString()} bytes）`;
+    clearFileBtn.style.display = "inline-block";
+  } else {
+    fileInfo.textContent = "";
+    clearFileBtn.style.display = "none";
+  }
+  recompute();
+});
+
+saltInput.addEventListener("input", recompute);
+saltPos.addEventListener("change", recompute);
+
+clearFileBtn.addEventListener("click", () => {
+  currentFile = null;
+  fileInput.value = "";
+  fileInfo.textContent = "";
+  clearFileBtn.style.display = "none";
+  recompute();
+});
+
+/* ---------- AES 加密／解密：GCM／CBC 二擇一，金鑰可用密碼衍生或手動輸入 ---------- */
+const PBKDF2_ITERATIONS = 250000;
+const aesMode = document.getElementById("aesMode");
+const aesKeySource = document.getElementById("aesKeySource");
+const aesEncoding = document.getElementById("aesEncoding");
+const aesPasswordGroup = document.getElementById("aesPasswordGroup");
+const aesManualGroup = document.getElementById("aesManualGroup");
+const aesPassword = document.getElementById("aesPassword");
+const aesKeyIvEncoding = document.getElementById("aesKeyIvEncoding");
+const aesKeyInput = document.getElementById("aesKeyInput");
+const aesIvInput = document.getElementById("aesIvInput");
+const aesKeyLenHint = document.getElementById("aesKeyLenHint");
+const aesIvLenHint = document.getElementById("aesIvLenHint");
+const aesKeyIvHint = document.getElementById("aesKeyIvHint");
+const aesPlain = document.getElementById("aesPlain");
+const aesCipher = document.getElementById("aesCipher");
+const aesStatus = document.getElementById("aesStatus");
+
+function bytesToBase64(bytes) {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+function base64ToBytes(b64) {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+function hexToBytes(hex) {
+  const clean = hex.trim().replace(/\s+/g, "");
+  if (!/^[0-9a-fA-F]*$/.test(clean) || clean.length % 2 !== 0) throw new Error("invalid hex");
+  const bytes = new Uint8Array(clean.length / 2);
+  for (let i = 0; i < bytes.length; i++) bytes[i] = parseInt(clean.substr(i * 2, 2), 16);
+  return bytes;
+}
+function encodeBytes(bytes) {
+  return aesEncoding.value === "hex" ? toHex(bytes) : bytesToBase64(bytes);
+}
+function decodeToBytes(str) {
+  return aesEncoding.value === "hex" ? hexToBytes(str) : base64ToBytes(str);
+}
+function decodeKeyIv(str) {
+  if (aesKeyIvEncoding.value === "utf8") return new TextEncoder().encode(str);
+  return aesKeyIvEncoding.value === "hex" ? hexToBytes(str) : base64ToBytes(str);
+}
+function ivLengthForMode() {
+  return aesMode.value === "CBC" ? 16 : 12;
+}
+function algoName() {
+  return aesMode.value === "CBC" ? "AES-CBC" : "AES-GCM";
+}
+async function deriveAesKey(password, salt) {
+  const keyMaterial = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations: PBKDF2_ITERATIONS, hash: "SHA-256" },
+    keyMaterial,
+    { name: algoName(), length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+function setAesStatus(text, isError) {
+  aesStatus.textContent = text;
+  aesStatus.classList.toggle("error", !!isError);
+}
+function updateAesHints() {
+  aesKeyLenHint.textContent = "16 / 24 / 32 bytes，對應 AES-128 / 192 / 256";
+  aesIvLenHint.textContent = aesMode.value === "CBC" ? "需 16 bytes" : "需 12 bytes";
+  aesKeyIvHint.textContent = aesKeyIvEncoding.value === "utf8"
+    ? "明文模式：長度以 UTF-8 位元組計算，英數字元每字 1 byte，中文字約 3 bytes，請自行湊到規定長度"
+    : "";
+}
+function toggleAesKeySourceUI() {
+  const manual = aesKeySource.value === "manual";
+  aesPasswordGroup.style.display = manual ? "none" : "flex";
+  aesManualGroup.style.display = manual ? "block" : "none";
+}
+aesMode.addEventListener("change", updateAesHints);
+aesKeyIvEncoding.addEventListener("change", updateAesHints);
+aesKeySource.addEventListener("change", toggleAesKeySourceUI);
+updateAesHints();
+toggleAesKeySourceUI();
+
+document.getElementById("aesEncryptBtn").addEventListener("click", async () => {
+  if (!aesPlain.value) { setAesStatus("請輸入明文", true); return; }
+  const ivLen = ivLengthForMode();
+  try {
+    let key, ivBytes, saltBytes = null;
+    if (aesKeySource.value === "manual") {
+      const keyBytes = decodeKeyIv(aesKeyInput.value.trim());
+      if (![16, 24, 32].includes(keyBytes.length)) throw new Error(`Key 長度需為 16/24/32 bytes，目前為 ${keyBytes.length} bytes`);
+      ivBytes = decodeKeyIv(aesIvInput.value.trim());
+      if (ivBytes.length !== ivLen) throw new Error(`IV 長度需為 ${ivLen} bytes，目前為 ${ivBytes.length} bytes`);
+      key = await crypto.subtle.importKey("raw", keyBytes, { name: algoName() }, false, ["encrypt"]);
+    } else {
+      if (!aesPassword.value) { setAesStatus("請輸入密碼", true); return; }
+      saltBytes = crypto.getRandomValues(new Uint8Array(16));
+      ivBytes = crypto.getRandomValues(new Uint8Array(ivLen));
+      key = await deriveAesKey(aesPassword.value, saltBytes);
+    }
+    const ciphertext = new Uint8Array(await crypto.subtle.encrypt({ name: algoName(), iv: ivBytes }, key, new TextEncoder().encode(aesPlain.value)));
+    aesCipher.value = saltBytes ? encodeBytes(concatBytes(concatBytes(saltBytes, ivBytes), ciphertext)) : encodeBytes(ciphertext);
+    setAesStatus(saltBytes ? "加密完成（密碼模式每次都會用新的隨機值，結果不會相同，屬正常現象）" : "加密完成");
+  } catch (e) {
+    setAesStatus("加密失敗：" + e.message, true);
+  }
+});
+
+document.getElementById("aesDecryptBtn").addEventListener("click", async () => {
+  if (!aesCipher.value.trim()) { setAesStatus("請輸入密文", true); return; }
+  const ivLen = ivLengthForMode();
+  try {
+    let key, ivBytes, data;
+    if (aesKeySource.value === "manual") {
+      const keyBytes = decodeKeyIv(aesKeyInput.value.trim());
+      if (![16, 24, 32].includes(keyBytes.length)) throw new Error(`Key 長度需為 16/24/32 bytes，目前為 ${keyBytes.length} bytes`);
+      ivBytes = decodeKeyIv(aesIvInput.value.trim());
+      if (ivBytes.length !== ivLen) throw new Error(`IV 長度需為 ${ivLen} bytes，目前為 ${ivBytes.length} bytes`);
+      key = await crypto.subtle.importKey("raw", keyBytes, { name: algoName() }, false, ["decrypt"]);
+      data = decodeToBytes(aesCipher.value.trim());
+    } else {
+      if (!aesPassword.value) { setAesStatus("請輸入密碼", true); return; }
+      const combined = decodeToBytes(aesCipher.value.trim());
+      if (combined.length < 16 + ivLen) throw new Error("密文長度不足");
+      const saltBytes = combined.slice(0, 16);
+      ivBytes = combined.slice(16, 16 + ivLen);
+      data = combined.slice(16 + ivLen);
+      key = await deriveAesKey(aesPassword.value, saltBytes);
+    }
+    const plainBuf = await crypto.subtle.decrypt({ name: algoName(), iv: ivBytes }, key, data);
+    aesPlain.value = new TextDecoder().decode(plainBuf);
+    setAesStatus("解密成功");
+  } catch (e) {
+    setAesStatus("解密失敗：密碼／Key／IV 錯誤，或密文格式不正確／已損毀", true);
+  }
+});
+
+document.querySelectorAll(".hash").forEach(el => {
+  el.style.cursor = "pointer";
+  el.title = "點擊複製";
+  el.addEventListener("click", () => {
+    if (!el.classList.contains("empty")) navigator.clipboard.writeText(el.textContent);
+  });
+});
+</script>
